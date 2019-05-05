@@ -1,0 +1,66 @@
+{
+  "name": "alarm",
+  "version": "0.1.0",
+  "description": "Create alerts, timers and stopwatches from the tray",
+  "main": "./main/main.js",
+  "scripts": {
+    "start": "npm-run-all --parallel renderer main",
+    "renderer": "TARGET=dev NODE_ENV=development webpack-dev-server --progress",
+    "main": "NODE_ENV=development electron .",
+    "test": "jest",
+    "package-linux": "electron-packager . --overwrite --platform=linux --arch=x64 --icon=assets/icon/icon.png --prune=true --out=build",
+    "package-win": "electron-packager . --overwrite --platform=win32 --asar=true --arch=ia32 --icon=assets/icon/icon.ico --prune=true --out=build --version-string.CompanyName='Nick Reiley' --version-string.FileDescription='Time management' --version-string.ProductName='Alarm'",
+    "package-mac": "electron-packager . --overwrite --platform=darwin --arch=x64 --icon=assets/icon/icon.icns --prune=true --out",
+    "build": "package-linux && package-win && package-mac"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bl00mber/alarm.git"
+  },
+  "author": "Nick Reiley (http://github.com/bl00mber) <bloomber111@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bl00mber/alarm/issues"
+  },
+  "homepage": "https://github.com/bl00mber/alarm",
+  "jest": {
+    "moduleNameMapper": {
+      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/test/__mocks__/fileMock.js",
+      "\\.(css|less|stylus|scss)$": "<rootDir>/test/__mocks__/styleMock.js"
+    },
+    "globals": {
+      "__DEV__": false
+    }
+  },
+  "devDependencies": {
+    "@babel/core": "^7.4.4",
+    "axios": "^0.18.0",
+    "babel-loader": "^8.0.5",
+    "babel-preset-react-app": "^8.0.0",
+    "css-loader": "^2.1.1",
+    "electron": "^5.0.0",
+    "electron-packager": "^13.1.1",
+    "img-loader": "^3.0.1",
+    "jest": "^24.7.1",
+    "mini-css-extract-plugin": "^0.6.0",
+    "node-sass": "^4.12.0",
+    "npm-run-all": "^4.1.5",
+    "redux-logger": "^3.0.6",
+    "sass-loader": "^7.1.0",
+    "spectron": "^5.0.0",
+    "style-loader": "^0.23.1",
+    "terser-webpack-plugin": "^1.2.3",
+    "url-loader": "^1.1.2",
+    "webpack": "^4.30.0",
+    "webpack-cli": "^3.3.1",
+    "webpack-dev-server": "^3.3.1",
+    "webpack-merge": "^4.2.1"
+  },
+  "dependencies": {
+    "electron-store": "^3.2.0",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "redux": "^4.0.1",
+    "redux-thunk": "^2.3.0"
+  }
+}
