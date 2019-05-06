@@ -10,7 +10,7 @@ const ROOT_PATH = path.resolve(__dirname)
 const common = {
   entry: path.resolve(ROOT_PATH, 'renderer', 'renderer.js'),
   resolve: {
-    extensions: ['.js', '.jsx'],
+    extensions: ['.js', '.jsx', '.ts', 'tsx'],
     modules: ['node_modules']
   },
   output: {
@@ -23,6 +23,11 @@ const common = {
         test: /\.(js|jsx)$/,
         loader: 'babel-loader',
         exclude: /node_modules/,
+      },
+      {
+        test: /\.(ts|tsx)$/,
+        use: 'ts-loader',
+        exclude: /node_modules/
       },
       {
         test: /\.(jpe?g|png|gif|svg)$/i,

@@ -1,8 +1,13 @@
 const path = require('path')
 const { app, BrowserWindow } = require('electron')
+const ApplicationMenu = require('./application-menu')
 
-// A global reference of the window object
+app.setName('Alarm')
+
 let mainWindow
+
+const applicationMenu = new ApplicationMenu()
+applicationMenu.setApplicationMenu()
 
 app.on('ready', () => {
   mainWindow = new BrowserWindow({ width: 800, height: 600 })
