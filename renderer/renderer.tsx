@@ -1,10 +1,10 @@
 import * as React from 'react'
 import { render } from 'react-dom'
-import Alarm from './components/Alarm'
+import AlarmApp from './components/AlarmApp'
 
 import '../style/style.scss'
 
 render(
-  <Alarm />,
+  <AlarmApp />,
   document.getElementById('root')
 )

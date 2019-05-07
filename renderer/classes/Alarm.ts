@@ -1,49 +1,57 @@
-type AlarmType = 'alarm'
-type TimerType = 'timer'
-type StopwatchType = 'stopwatch'
-type RepeatType = 'once' | 'weekly' | 'countdown'
+import { AlarmInterface, AlarmType, AlarmStateType,
+  RepeatType, Week } from '../types/alarm'
 
-interface Week {
-  mon: boolean;
-  tue: boolean;
-  wed: boolean;
-  thu: boolean;
-  fri: boolean;
-  sat: boolean;
-  sun: boolean;
-}
-
-export default class Alarm {
+export default class Alarm implements AlarmInterface {
   /**
-   * @param type
+   * @param alarmType
    * @param description
-   * @param timeToActivate          | AlarmType = 'alarm'
-   * @param repeatType              | AlarmType = 'alarm'
-   * @param repeatIsActive          | AlarmType = 'alarm'
-   * @param repeatDaysOfWeek        | AlarmType = 'alarm'
-   * @param repeatCountdown         | AlarmType = 'alarm'
-   * @param repeatFrom              | AlarmType = 'alarm'
-   * @param playSound               | AlarmType = 'alarm' | 'timer'
-   * @param soundPath               | AlarmType = 'alarm' | 'timer'
-   * @param repeatSound             | AlarmType = 'alarm' | 'timer'
-   * @param startApplication        | AlarmType = 'alarm' | 'timer'
-   * @param applicationCommand      | AlarmType = 'alarm' | 'timer'
-   * @param timerTimeFrom           | AlarmType = 'timer'
-   * @param timerTimeToWait         | AlarmType = 'timer'
-   * @param stopwatchTimeFrom       | AlarmType = 'stopwatch'
-   * @param stopwatchTotalTime      | AlarmType = 'stopwatch'
+   * @param alarmState
+   * @param timeToActivate          | Alarm
+   * @param repeatType              | Alarm
+   * @param repeatDaysOfWeek        | Alarm
+   * @param repeatCountdown         | Alarm
+   * @param repeatFrom              | Alarm
+   * @param playSound               | Alarm | Timer
+   * @param soundPath               | Alarm | Timer
+   * @param repeatSound             | Alarm | Timer
+   * @param startApplication        | Alarm | Timer
+   * @param applicationCommand      | Alarm | Timer
+   * @param timerTimeFrom           | Timer
+   * @param timerTimeToWait         | Timer
+   * @param stopwatchTimeFrom       | Stopwatch
+   * @param stopwatchTotalTime      | Stopwatch
+   *
+   * by default class instances implements Alarm
+   * constructor assignment should be identical to createAlarm()
    */
-
-  constructor(
-    type: AlarmType, description: string
-  ) {
-    Object.assign(this, type, description)
+  constructor({
+    alarmType, description, alarmState, timeToActivate,
+    repeatType, repeatDaysOfWeek, repeatCountdown, repeatFrom,
+    playSound, soundPath, repeatSound,
+    startApplication, applicationCommand
+  }: {
+    alarmType: AlarmType, description: string,
+    alarmState: AlarmStateType, timeToActivate: Date,
+    repeatType: RepeatType, repeatDaysOfWeek: Week,
+    repeatCountdown: number, repeatFrom: Date,
+    playSound: boolean, soundPath: string, repeatSound: boolean,
+    startApplication: boolean, applicationCommand: string
+  }) {
+    Object.assign(
+      this, alarmType, description, alarmState, timeToActivate,
+      repeatType, repeatDaysOfWeek,
+      repeatCountdown, repeatFrom,
+      playSound, soundPath, repeatSound,
+      startApplication, applicationCommand
+    )
   }
 
-  _cleanAlarm() {
+  _cleanAlarm = () => {
+    this.alarmType = undefined
+    this.description = undefined
+    this.alarmState = undefined
     this.timeToActivate = undefined
     this.repeatType = undefined
-    this.repeatIsActive = undefined
     this.repeatDaysOfWeek = undefined
     this.repeatCountdown = undefined
     this.repeatFrom = undefined
@@ -58,58 +66,72 @@ export default class Alarm {
     this.stopwatchTotalTime = undefined
   }
 
-  createAlarm(
-    type: AlarmType, description: string, timeToActivate: Date,
-    repeatType: RepeatType, repeatIsActive: boolean, repeatDaysOfWeek: Week,
+  createAlarm({
+    alarmType, description, alarmState, timeToActivate,
+    repeatType, repeatDaysOfWeek, repeatCountdown, repeatFrom,
+    playSound, soundPath, repeatSound,
+    startApplication, applicationCommand
+  }: {
+    alarmType: AlarmType, description: string,
+    alarmState: AlarmStateType, timeToActivate: Date,
+    repeatType: RepeatType, repeatDaysOfWeek: Week,
     repeatCountdown: number, repeatFrom: Date,
     playSound: boolean, soundPath: string, repeatSound: boolean,
     startApplication: boolean, applicationCommand: string
-  ) {
+  }) {
     this._cleanAlarm()
     Object.assign(
-      this, type, description, timeToActivate,
-      repeatType, repeatIsActive, repeatDaysOfWeek,
+      this, alarmType, description, alarmState, timeToActivate,
+      repeatType, repeatDaysOfWeek,
       repeatCountdown, repeatFrom,
       playSound, soundPath, repeatSound,
       startApplication, applicationCommand
     )
   }
 
-  createTimer(
-    type: TimerType, description: string,
+  createTimer({
+    alarmType, description, alarmState,
+    playSound, soundPath, repeatSound,
+    startApplication, applicationCommand,
+    timerTimeFrom, timerTimeToWait
+  }: {
+    alarmType: AlarmType, description: string, alarmState: AlarmStateType,
     playSound: boolean, soundPath: string, repeatSound: boolean,
     startApplication: boolean, applicationCommand: string,
-    timerTimeFrom: Date, timerTimeToWait: number,
-  ) {
+    timerTimeFrom: Date, timerTimeToWait: number
+  }) {
     this._cleanAlarm()
     Object.assign(
-      this, type, description,
+      this, alarmType, description, alarmState,
       playSound, soundPath, repeatSound,
       startApplication, applicationCommand,
       timerTimeFrom, timerTimeToWait,
     )
   }
 
-  createStopwatch(
-    type: StopwatchType, description: string,
+  createStopwatch({
+    alarmType, description, alarmState,
+    stopwatchTimeFrom, stopwatchTotalTime
+  }: {
+    alarmType: AlarmType, description: string, alarmState: AlarmStateType,
     stopwatchTimeFrom: Date, stopwatchTotalTime: number
-  ) {
+  }) {
     this._cleanAlarm()
     Object.assign(
-      this, type, description,
+      this, alarmType, description, alarmState,
       stopwatchTimeFrom, stopwatchTotalTime
     )
   }
 
-  set type(type: AlarmType) { this.type = type }
+  set alarmType(alarmType: AlarmType) { this.alarmType = alarmType }
 
   set description(description: string) { this.description = description }
+
+  set alarmState(alarmState: AlarmStateType) { this.alarmState = alarmState }
 
   set timeToActivate(timeToActivate: Date) { this.timeToActivate = timeToActivate }
 
   set repeatType(repeatType: RepeatType) { this.repeatType = repeatType }
-
-  set repeatIsActive(repeatIsActive: boolean) { this.repeatIsActive = repeatIsActive }
 
   set repeatDaysOfWeek(repeatDaysOfWeek: Week) { this.repeatDaysOfWeek = repeatDaysOfWeek }
 
@@ -134,39 +156,4 @@ export default class Alarm {
   set stopwatchTimeFrom(stopwatchTimeFrom: Date) { this.stopwatchTimeFrom = stopwatchTimeFrom }
 
   set stopwatchTotalTime(stopwatchTotalTime: number) { this.stopwatchTotalTime = stopwatchTotalTime }
-
-
-  get type() { return this.type }
-
-  get description() { return this.description }
-
-  get timeToActivate() { return this.timeToActivate }
-
-  get repeatType() { return this.repeatType }
-
-  get repeatIsActive() { return this.repeatIsActive }
-
-  get repeatDaysOfWeek() { return this.repeatDaysOfWeek }
-
-  get repeatCountdown() { return this.repeatCountdown }
-
-  get repeatFrom() { return this.repeatFrom }
-
-  get playSound() { return this.playSound }
-
-  get soundPath() { return this.soundPath }
-
-  get repeatSound() { return this.repeatSound }
-
-  get startApplication() { return this.startApplication }
-
-  get applicationCommand() { return this.applicationCommand }
-
-  get timerTimeFrom() { return this.timerTimeFrom }
-
-  get timerTimeToWait() { return this.timerTimeToWait }
-
-  get stopwatchTimeFrom() { return this.stopwatchTimeFrom }
-
-  get stopwatchTotalTime() { return this.stopwatchTotalTime }
 }
