@@ -1,24 +1,27 @@
 /**
  * Properties for implementation Timer or Stopwatch is non-required
  */
-export interface AlarmInterface {
-  alarmType: AlarmType | undefined;
+export interface AlarmFields {
+  alarmType: AlarmType;
   description: string | undefined;
   alarmState: AlarmStateType | undefined;
+
   timeToActivate: Date | undefined;
   repeatType: RepeatType | undefined;
   repeatDaysOfWeek: Week | undefined;
   repeatCountdown: number | undefined;
-  repeatFrom: Date | undefined;
   playSound: boolean | undefined;
   soundPath: string | undefined;
   repeatSound: boolean | undefined;
   startApplication: boolean | undefined;
+  autoStopAlarm: boolean | undefined;
   applicationCommand: string | undefined;
-  timerTimeFrom?: Date | undefined;
-  timerTimeToWait?: number | undefined;
-  stopwatchTimeFrom?: Date | undefined;
-  stopwatchTotalTime?: number | undefined;
+
+  timerTimeFrom: Date | undefined;
+  timerTimeToWait: number | undefined;
+
+  stopwatchTimeFrom: Date | undefined;
+  stopwatchTotalTime: number | undefined;
 }
 
 export type AlarmType = 'alarm' | 'timer' | 'stopwatch'

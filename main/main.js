@@ -12,23 +12,24 @@ applicationMenu.setApplicationMenu()
 app.on('ready', () => {
   mainWindow = new BrowserWindow({ width: 800, height: 600 })
 
-  if (process.env.npm_package_scripts_main.slice(9,20) === "development") {
-    (function waitForWebpackDevServer() {
-      const axios = require('axios')
-      axios.get('http://localhost:8080/index.html').then(res => {
-
-        process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = true
-        mainWindow.loadURL('http://localhost:8080/index.html')
-        mainWindow.openDevTools()
-
-      }).catch(err => {
-        setTimeout(waitForWebpackDevServer(), 200)
-      })
-    })()
-  }
-  else {
-    mainWindow.loadURL('file://'+path.resolve(__dirname, '..', 'index.html'))
-  }
+  // if (process.env.npm_package_scripts_main.slice(9,20) === "development") {
+  //   function waitForWebpackDevServer() {
+  //     const axios = require('axios')
+  //     axios.get('http://localhost:8080/index.html').then(res => {
+  //
+  //       process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = true
+  //       mainWindow.loadURL('http://localhost:8080/index.html')
+  //       mainWindow.openDevTools()
+  //
+  //     }).catch(err => {
+  //       setTimeout(waitForWebpackDevServer(), 200)
+  //     })
+  //   }
+  //   waitForWebpackDevServer()
+  // }
+  // else {
+  //   mainWindow.loadURL('file://'+path.resolve(__dirname, '..', 'index.html'))
+  // }
 
   mainWindow.on('closed', function() {
     // Dereference the window object, usually you would store windows

@@ -1,0 +1,65 @@
+body {
+  font-family: 'Roboto', sans-serif;
+  font-size: 15px;
+}
+
+div {
+  display: flex;
+  border: 1px solid black;
+}
+
+.padding {
+  padding: 10px 15px;
+}
+
+.btn {
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  margin-right: 10px;
+}
+
+.btn-padding {
+  cursor: pointer;
+  padding: 10px 15px;
+  margin-right: 15px;
+  border-radius: 7px;
+  background: #fff;
+  box-shadow: 0 2px 15px #0000001f;
+}
+
+.btn-last {
+  margin-right: 0;
+}
+
+.alarms-container, .settings-container, .alarms-list, .alarm-countdown {
+  flex-direction: column;
+}
+
+.settings-footer {
+  justify-content: flex-end;
+}
+//
+// . {
+//
+// }
+//
+// . {
+//
+// }
+//
+// . {
+//
+// }
+//
+// . {
+//
+// }
+//
+// . {
+//
+// }
+//
+// . {
+//
+// }

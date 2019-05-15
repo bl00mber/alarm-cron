@@ -8,9 +8,9 @@ const TARGET = process.env.TARGET
 const ROOT_PATH = path.resolve(__dirname)
 
 const common = {
-  entry: path.resolve(ROOT_PATH, 'renderer', 'renderer.js'),
+  entry: path.resolve(ROOT_PATH, 'renderer', 'renderer.tsx'),
   resolve: {
-    extensions: ['.js', '.jsx', '.ts', 'tsx'],
+    extensions: ['.js', '.jsx', '.ts', '.tsx'],
     modules: ['node_modules']
   },
   output: {
@@ -20,14 +20,9 @@ const common = {
   module: {
     rules: [
       {
-        test: /\.(js|jsx)$/,
+        test: /\.(js|jsx|tsx|ts)$/,
         loader: 'babel-loader',
         exclude: /node_modules/,
-      },
-      {
-        test: /\.(ts|tsx)$/,
-        use: 'ts-loader',
-        exclude: /node_modules/
       },
       {
         test: /\.(jpe?g|png|gif|svg)$/i,
