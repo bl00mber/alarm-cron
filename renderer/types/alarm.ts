@@ -1,6 +1,18 @@
-/**
- * Properties for implementation Timer or Stopwatch is non-required
- */
+export type AlarmType = 'alarm' | 'timer' | 'stopwatch'
+export type AlarmStateType = 'enabled' | 'disabled' | 'active'
+export type RepeatType = 'once' | 'weekly' | 'countdown'
+
+export interface Week {
+  [key: string]: boolean;
+  mon: boolean;
+  tue: boolean;
+  wed: boolean;
+  thu: boolean;
+  fri: boolean;
+  sat: boolean;
+  sun: boolean;
+}
+
 export interface AlarmFields {
   alarmType: AlarmType;
   description: string | undefined;
@@ -24,17 +36,22 @@ export interface AlarmFields {
   stopwatchTotalTime: number | undefined;
 }
 
-export type AlarmType = 'alarm' | 'timer' | 'stopwatch'
-export type AlarmStateType = 'enabled' | 'disabled' | 'active'
-export type RepeatType = 'once' | 'weekly' | 'countdown'
+export interface DefaultFields {
+  alarmType: AlarmType;
+  description: string;
+  alarmState: AlarmStateType;
 
-export interface Week {
-  [key: string]: boolean;
-  mon: boolean;
-  tue: boolean;
-  wed: boolean;
-  thu: boolean;
-  fri: boolean;
-  sat: boolean;
-  sun: boolean;
+  defaultOffset: number;
+  repeatType: RepeatType;
+  repeatDaysOfWeek: Week;
+  repeatCountdown: number;
+  playSound: boolean;
+  soundPath: string;
+  repeatSound: boolean;
+  startApplication: boolean;
+  autoStopAlarm: boolean;
+  applicationCommand: string;
+
+  timerTimeToWait: number;
+  stopwatchTotalTime: number;
 }

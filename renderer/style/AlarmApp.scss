@@ -39,27 +39,10 @@ div {
 .settings-footer {
   justify-content: flex-end;
 }
-//
-// . {
-//
-// }
-//
-// . {
-//
-// }
-//
-// . {
-//
-// }
-//
-// . {
-//
-// }
-//
-// . {
-//
-// }
-//
-// . {
-//
-// }
+
+.alarm-container {
+  cursor: pointer;
+  &.active {
+    background: #dadada;
+  }
+}

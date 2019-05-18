@@ -7,11 +7,9 @@
 */
 
 import * as React from 'react'
-// @ts-ignore
-import * as _ from 'underscore-plus'
 import EditAlarm from './EditAlarm'
 import Alarm from '../classes/Alarm'
-import { AlarmFields, AlarmType, AlarmStateType,
+import { DefaultFields, AlarmType, AlarmStateType,
   RepeatType, Week } from '../types/alarm'
 
 import '../style/AlarmApp.scss'
@@ -19,6 +17,9 @@ import '../style/AlarmApp.scss'
 declare global {
   interface Date {
     toLocalISOString(): string;
+  }
+  interface String {
+    capitalize(): string;
   }
 }
 
@@ -39,15 +40,20 @@ Date.prototype.toLocalISOString = function() {
     ':' + pad(tzo % 60);
 }
 
+String.prototype.capitalize = function() {
+  return this.charAt(0).toUpperCase() + this.slice(1)
+}
+
 // Defaults, needs to be placed into app/settings
-const defAl: AlarmFields = {
+const defaults: DefaultFields = {
   alarmType: 'alarm',
   description: 'Alarm',
   alarmState: 'enabled',
-  timeToActivate: new Date(),
+
+  defaultOffset: 600, // timeToActivate
   repeatType: 'once',
   repeatDaysOfWeek: {mon: false, tue: false, wed: false, thu: false, fri: false, sat: false, sun: false},
-  repeatCountdown: 0,
+  repeatCountdown: 1,
   playSound: true,
   soundPath: '', // here should be default mp3
   repeatSound: true,
@@ -55,42 +61,63 @@ const defAl: AlarmFields = {
   autoStopAlarm: false,
   applicationCommand: '',
 
-  timerTimeFrom: new Date(),
   timerTimeToWait: 600,
-
-  stopwatchTimeFrom: new Date(),
   stopwatchTotalTime: 0,
 }
 
 interface State {
-  defAl: Alarm,
+  defaults: Alarm,
+  currentTime: Date,
   alarms?: Alarm[],
-  selectedAlarmIndex: number | undefined,
+  selectedAlarmIndex: number | null,
+  editIsEnabled: boolean,
 }
 
 export default class AlarmApp extends React.Component<any, State> {
+  currentTimeInterval: NodeJS.Timeout;
+
   constructor(props: object) {
     super(props)
 
     const alarm = new Alarm({
-      alarmType: defAl.alarmType, description: defAl.description, alarmState: defAl.alarmState,
-      timeToActivate: defAl.timeToActivate,
-      repeatType: defAl.repeatType, repeatDaysOfWeek: defAl.repeatDaysOfWeek,
-      repeatCountdown: defAl.repeatCountdown,
-      playSound: defAl.playSound, soundPath: defAl.soundPath, repeatSound: defAl.repeatSound,
-      startApplication: defAl.startApplication, autoStopAlarm: defAl.autoStopAlarm,
-      applicationCommand: defAl.applicationCommand,
+      alarmType: defaults.alarmType, description: defaults.description,
+      alarmState: defaults.alarmState,
+      timeToActivate: this.addSecondsToNow(defaults.defaultOffset),
+      repeatType: defaults.repeatType, repeatDaysOfWeek: defaults.repeatDaysOfWeek,
+      repeatCountdown: defaults.repeatCountdown,
+      playSound: defaults.playSound, soundPath: defaults.soundPath, repeatSound: defaults.repeatSound,
+      startApplication: defaults.startApplication, autoStopAlarm: defaults.autoStopAlarm,
+      applicationCommand: defaults.applicationCommand,
     })
 
     this.state = {
-      defAl: alarm,
+      defaults: alarm,
+      currentTime: new Date(),
       // alarms: [],
-      // selectedAlarmIndex: undefined,
+      // selectedAlarmIndex: null,
+      // editIsEnabled: false,
 
       // dev
       alarms: [alarm],
       selectedAlarmIndex: 0,
+      editIsEnabled: true,
     }
+  }
+
+  componentDidMount() {
+    // this.currentTimeInterval = setInterval(() => this.setState({ currentTime: new Date() }), 1000)
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.currentTimeInterval)
+  }
+
+  addSecondsToNow = (seconds: number): Date => {
+    // currentTime -> timestamp/1000 -> +ss -> timestamp*1000 -> new Date
+    let currentTime
+    if (this.state) { currentTime = this.state.currentTime }
+    else { currentTime = new Date() }
+    return new Date((Math.floor(currentTime.getTime()/1000)+seconds)*1000)
   }
 
   toddMMHHmmss (date: Date): string {
@@ -98,14 +125,14 @@ export default class AlarmApp extends React.Component<any, State> {
     return date.getDay()+' '+month+' '+date.toLocalISOString().slice(11,19)
   }
 
-  toDDHHmmss (ss_total: number): string {
+  toDDHHmmss (ssTotal: number): string {
     let str = ''
-    const dd = Math.floor(ss_total/86400)
-    let ss_rem = ss_total%86400
+    const dd = Math.floor(ssTotal/86400)
+    let ssRem = ssTotal%86400
 
-    const hh = Math.floor(ss_rem/3600)
-    let mm: any = Math.floor((ss_rem-(hh*3600))/60)
-    let ss: any = ss_rem-(hh*3600)-(mm*60)
+    const hh = Math.floor(ssRem/3600)
+    let mm: any = Math.floor((ssRem-(hh*3600))/60)
+    let ss: any = ssRem-(hh*3600)-(mm*60)
 
     if (mm < 10) {mm = '0'+mm}
     if (ss < 10) {ss = '0'+ss}
@@ -198,9 +225,13 @@ export default class AlarmApp extends React.Component<any, State> {
   }
 
   alarmsJSX = (): React.ReactElement<{}>[] => {
+    const { alarms, selectedAlarmIndex } = this.state
     const alarmsJSX: React.ReactElement<{}>[] = []
-    this.state.alarms.map((alarm: Alarm, index: number) => {
-      alarmsJSX.push(<div key={index} className="alarm-container">
+
+    alarms.map((alarm: Alarm, index: number) => {
+      alarmsJSX.push(<div key={index} className={"alarm-container" +
+          (index === selectedAlarmIndex ? ' active' : '')}
+          onClick={() => this.setState({ selectedAlarmIndex: index })}>
         <div className={this.getAlarmIconClass(alarm.alarmType)}></div>
         {this.alarmCountdownsJSX(alarm.alarmType, alarm)}
         <div className="alarm-description padding">{alarm.description}</div>
@@ -210,16 +241,50 @@ export default class AlarmApp extends React.Component<any, State> {
     return alarmsJSX
   }
 
-  render() {
+  // Modification controls handlers
+  createDefaultAlarm = () => {
+    const alarm = new Alarm({
+      alarmType: defaults.alarmType, description: defaults.description, alarmState: defaults.alarmState,
+      timeToActivate: this.addSecondsToNow(defaults.defaultOffset),
+      repeatType: defaults.repeatType, repeatDaysOfWeek: defaults.repeatDaysOfWeek,
+      repeatCountdown: defaults.repeatCountdown,
+      playSound: defaults.playSound, soundPath: defaults.soundPath, repeatSound: defaults.repeatSound,
+      startApplication: defaults.startApplication, autoStopAlarm: defaults.autoStopAlarm,
+      applicationCommand: defaults.applicationCommand,
+    })
+    this.setState({ alarms: [...this.state.alarms, alarm] })
+  }
+
+  deleteSelectedAlarmIndex = () => {
     const { alarms, selectedAlarmIndex } = this.state
+    this.setState({ alarms: alarms.splice(selectedAlarmIndex, 1), selectedAlarmIndex: null })
+  }
+
+  updateAlarm = (key: string, value: any, callback?: () => any) => {
+    const { alarms, selectedAlarmIndex } = this.state
+    alarms[selectedAlarmIndex][key] = value
+    if (callback) { this.setState({ alarms }, callback) }
+    else { this.setState({ alarms }) }
+  }
+
+  rerenderApp = () => {
+    this.forceUpdate()
+  }
+
+  render() {
+    const { alarms, currentTime, selectedAlarmIndex, editIsEnabled } = this.state
+    console.log('THIS.STATE', this.state)
     return (
       <div className="app-container">
         <div className="alarms-container">
           <div className="alarms-controls">
             <div className="alarms-modification-controls padding">
-              <div className="new-alarm btn"></div>
-              <div className="edit-alarm btn"></div>
-              <div className="delete-alarm btn btn-last"></div>
+              <div className="new-alarm btn"
+                onClick={this.createDefaultAlarm}></div>
+              <div className={"edit-alarm btn" + (editIsEnabled ? ' active': '')}
+                onClick={() => this.setState({ editIsEnabled: !editIsEnabled })}></div>
+              <div className="delete-alarm btn btn-last"
+                onClick={this.deleteSelectedAlarmIndex}></div>
             </div>
 
             <div className="alarms-process-controls padding">
@@ -233,15 +298,22 @@ export default class AlarmApp extends React.Component<any, State> {
           </div>
         </div>
 
-        {selectedAlarmIndex !== undefined &&
+        {(editIsEnabled && selectedAlarmIndex !== null) &&
         <div className="settings-container">
-          <EditAlarm alarm={alarms[selectedAlarmIndex]} defAl={defAl} />
+          <EditAlarm
+            alarm={alarms[selectedAlarmIndex]}
+            defaults={defaults}
+            currentTime={currentTime}
+            rerenderApp={this.rerenderApp}
+            updateAlarm={this.updateAlarm}
+            addSecondsToNow={this.addSecondsToNow}
+            toDDHHmmss={this.toDDHHmmss}
+          />
           <div className="settings-footer padding">
             <div className="app-settings btn-padding">Settings</div>
             <div className="app-about btn-padding btn-last">About</div>
           </div>
-        </div>
-        }
+        </div>}
       </div>
     )
   }

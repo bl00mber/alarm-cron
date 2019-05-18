@@ -59,9 +59,9 @@ export default class Alarm implements AlarmFields {
   }
 
   setAlarm ({
-    alarmType, alarmState
+    alarmType, description, alarmState
   }: {
-    alarmType: AlarmType, alarmState: AlarmStateType
+    alarmType: AlarmType, description: string, alarmState: AlarmStateType
   }) {
     Object.assign(
       this, arguments[0]
@@ -69,10 +69,10 @@ export default class Alarm implements AlarmFields {
   }
 
   setTimer ({
-    alarmType, alarmState,
+    alarmType, description, alarmState,
     timerTimeFrom, timerTimeToWait
   }: {
-    alarmType: AlarmType, alarmState: AlarmStateType,
+    alarmType: AlarmType, description: string, alarmState: AlarmStateType,
     timerTimeFrom: Date, timerTimeToWait: number
   }) {
     Object.assign(
@@ -81,10 +81,10 @@ export default class Alarm implements AlarmFields {
   }
 
   setStopwatch ({
-    alarmType, alarmState,
+    alarmType, description, alarmState,
     stopwatchTimeFrom, stopwatchTotalTime
   }: {
-    alarmType: AlarmType, alarmState: AlarmStateType,
+    alarmType: AlarmType, description: string, alarmState: AlarmStateType,
     stopwatchTimeFrom: Date, stopwatchTotalTime: number
   }) {
     Object.assign(
