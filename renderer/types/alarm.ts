@@ -1,6 +1,6 @@
 export type AlarmType = 'alarm' | 'timer' | 'stopwatch'
 export type AlarmStateType = 'enabled' | 'disabled' | 'active'
-export type RepeatType = 'once' | 'weekly' | 'countdown'
+export type RepeatType = 'once' | 'weekly' | 'countdown' | 'timer'
 
 export interface Week {
   [key: string]: boolean;
@@ -22,6 +22,8 @@ export interface AlarmFields {
   repeatType: RepeatType | undefined;
   repeatDaysOfWeek: Week | undefined;
   repeatCountdown: number | undefined;
+  repeatFrom: Date | undefined;
+
   playSound: boolean | undefined;
   soundPath: string | undefined;
   repeatSound: boolean | undefined;
@@ -31,6 +33,7 @@ export interface AlarmFields {
 
   timerTimeFrom: Date | undefined;
   timerTimeToWait: number | undefined;
+  timerTimeToWaitCountdown: number | undefined;
 
   stopwatchTimeFrom: Date | undefined;
   stopwatchTotalTime: number | undefined;
@@ -38,10 +41,13 @@ export interface AlarmFields {
 
 export interface DefaultFields {
   alarmType: AlarmType;
-  description: string;
+  descAlarm: string;
+  descTimer: string;
+  descStopwatch: string;
   alarmState: AlarmStateType;
 
   defaultOffset: number;
+  floorSeconds: boolean;
   repeatType: RepeatType;
   repeatDaysOfWeek: Week;
   repeatCountdown: number;
@@ -54,4 +60,8 @@ export interface DefaultFields {
 
   timerTimeToWait: number;
   stopwatchTotalTime: number;
+
+  postponeOffset: number;
+  autoDisableAlarms: boolean;
+  autoDisableAfterMM: number;
 }

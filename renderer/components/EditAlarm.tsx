@@ -1,5 +1,5 @@
 /*
- * Copyright Nick Reiley <bloomber111@gmail.com>
+ * Copyright Nick Reiley (https://github.com/bl00mber) <bloomber111@gmail.com>
 
  * Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
 
@@ -8,11 +8,13 @@
 
 import * as React from 'react'
 // @ts-ignore
+import cloneDeep from 'lodash.clonedeep'
+// @ts-ignore
 import DatePicker from 'react-bootstrap-date-picker'
 // @ts-ignore
 import TimeField from 'react-simple-timefield'
 import Alarm from '../classes/Alarm'
-import { DefaultFields, Week, RepeatType } from '../types/alarm'
+import { AlarmType, AlarmStateType, RepeatType, Week, DefaultFields } from '../types/alarm'
 
 import '../style/EditAlarm.scss'
 
@@ -20,23 +22,16 @@ interface Props {
   alarm: Alarm,
   defaults: DefaultFields,
   currentTime: Date,
-  rerenderApp: () => void,
-  updateAlarm: (key: string, value: any, callback?: () => any) => void,
+  updateAlarmKey: (key: string, value: any, callback?: () => any) => void,
+  updateAlarmInstance: (alarm: Alarm, alarmIndex?: number, callback?: () => any) => void,
   addSecondsToNow: (seconds: number) => Date,
-  toDDHHmmss: (seconds: number) => string,
+  toDDHHmmss: (seconds: number, alarmType: AlarmType) => string,
+  runAlarmHandler: (alarmType: AlarmType, alarmState: AlarmStateType, alarmIndex?: number) => void,
+  runCustomAlarmHandler: (handlerKey: string, args?: any[], alarmIndex?: number) => void,
+  getAlarmHandlerClass: (alarmState: AlarmStateType) => string,
 }
 
-interface State {
-  edit: string,
-}
-
-export default class EditAlarm extends React.Component<Props, State> {
-  constructor(props: any) {
-    super(props)
-    this.state = {
-      edit: props.alarm.alarmType,
-    }
-  }
+export default class EditAlarm extends React.Component<Props, any> {
 
   localToGlobalISOString = (localISOString: string): string => {
     const dateUTC = new Date(localISOString)
@@ -47,11 +42,12 @@ export default class EditAlarm extends React.Component<Props, State> {
 
   // Alarm
   setAlarm = () => {
-    this.props.alarm.setAlarm({
-      alarmType: 'alarm', description: 'Alarm', alarmState: 'disabled',
+    const { defaults } = this.props
+    const alarm = cloneDeep(this.props.alarm)
+    alarm.setAlarm({
+      alarmType: 'alarm', description: defaults.descAlarm, alarmState: 'disabled',
     })
-    this.setState({edit: 'alarm'})
-    this.props.rerenderApp()
+    this.props.updateAlarmInstance(alarm)
   }
 
   /**
@@ -71,7 +67,7 @@ export default class EditAlarm extends React.Component<Props, State> {
     updatedDate.setFullYear(year)
     updatedDate.setMonth(month)
     updatedDate.setDate(day)
-    this.props.updateAlarm(alarmKey, updatedDate)
+    this.props.updateAlarmKey(alarmKey, updatedDate)
   }
 
   updateTime = (alarmKey: string, oldDate: Date, value: string) => {
@@ -80,7 +76,7 @@ export default class EditAlarm extends React.Component<Props, State> {
 
     const updatedDate = new Date(oldDate.getTime())
     updatedDate.setHours(hours, minutes, 0)
-    this.props.updateAlarm(alarmKey, updatedDate)
+    this.props.updateAlarmKey(alarmKey, updatedDate)
   }
   // -----------------------------------------
 
@@ -112,15 +108,12 @@ export default class EditAlarm extends React.Component<Props, State> {
         let weekStr = ''
         for (let key in alarm.repeatDaysOfWeek) {
           if (alarm.repeatDaysOfWeek[key]) {
-            if (weekStr.length > 0) {
-              weekStr = weekStr+', '+key.capitalize()
-            } else {
-              weekStr += key.capitalize()
-            }
+            if (weekStr.length > 0) { weekStr = weekStr+', '+key.capitalize() }
+            else { weekStr += key.capitalize() }
           }
         }
         return weekStr
-      case 'countdown': return 'Every '+alarm.repeatCountdown+' day from '+this.getDateFromDate(alarm.timeToActivate)
+      case 'countdown': return 'Every '+alarm.repeatCountdown+' day from '+this.getDateFromDate(alarm.repeatFrom)
     }
   }
 
@@ -147,7 +140,7 @@ export default class EditAlarm extends React.Component<Props, State> {
       if (weekDayIsToggled) { repeatType = 'weekly' }
       else { repeatType = 'once' }
     }
-    this.props.updateAlarm('repeatType', repeatType)
+    this.props.updateAlarmKey('repeatType', repeatType)
   }
 
   weekJSX = (week: Week, repeatType: RepeatType): React.ReactElement<{}>[] => {
@@ -161,7 +154,7 @@ export default class EditAlarm extends React.Component<Props, State> {
             const { alarm } = this.props
             const week = {...alarm.repeatDaysOfWeek}
             week[key] = !week[key]
-            this.props.updateAlarm('repeatDaysOfWeek', week, this.updateRepeatType)
+            this.props.updateAlarmKey('repeatDaysOfWeek', week, this.updateRepeatType)
           }} />
         <label htmlFor={"alarm_"+key}>{key.capitalize()}</label>
       </div>)
@@ -170,17 +163,15 @@ export default class EditAlarm extends React.Component<Props, State> {
   }
 
   // Timer
-  // Remainder is a seconds remainder from overall time divided on days
+  // Remainder is a seconds remainder from overall time divided by days
   setTimer = () => {
-    const { alarm } = this.props
     const { defaults } = this.props
+    const alarm = cloneDeep(this.props.alarm)
     alarm.setTimer({
-      alarmType: 'timer', description: 'Timer', alarmState: 'disabled',
-      timerTimeFrom: alarm.timerTimeFrom || new Date(),
+      alarmType: 'timer', description: defaults.descTimer, alarmState: 'disabled',
       timerTimeToWait: alarm.timerTimeToWait || defaults.timerTimeToWait,
     })
-    this.setState({edit: 'timer'})
-    this.props.rerenderApp()
+    this.props.updateAlarmInstance(alarm)
   }
 
   getDaysTimerTimeToWait (timerTimeToWait: number): number { // DD
@@ -210,8 +201,8 @@ export default class EditAlarm extends React.Component<Props, State> {
       minutes = String(Math.floor(remainder/60))
     }
 
-    if (hours.length < 2) { hours += '0' }
-    if (minutes.length < 2) { minutes += '0' }
+    if (hours.length < 2) { hours = '0'+hours }
+    if (minutes.length < 2) { minutes = '0'+minutes }
     return hours+':'+minutes
   }
 
@@ -228,8 +219,7 @@ export default class EditAlarm extends React.Component<Props, State> {
     } else {
       updatedTimerTimeToWait = remainder
     }
-    console.log('updatedTimerTimeToWait', updatedTimerTimeToWait)
-    this.props.updateAlarm('timerTimeToWait', updatedTimerTimeToWait)
+    this.props.updateAlarmKey('timerTimeToWait', updatedTimerTimeToWait)
   }
 
   updateTimeTimerTimeToWait = (timerTimeToWait: number, time: string) => {
@@ -239,55 +229,54 @@ export default class EditAlarm extends React.Component<Props, State> {
 
     const days = Math.floor(timerTimeToWait/86400)
     const updatedTimerTimeToWait = (days === 0) ? remainder : (86400*days + remainder)
-    this.props.updateAlarm('timerTimeToWait', updatedTimerTimeToWait)
+    this.props.updateAlarmKey('timerTimeToWait', updatedTimerTimeToWait)
   }
 
   // Stopwatch
   setStopwatch = () => {
-    const { alarm } = this.props
     const { defaults } = this.props
+    const alarm = cloneDeep(this.props.alarm)
     alarm.setStopwatch({
-      alarmType: 'stopwatch', description: 'Stopwatch', alarmState: 'disabled',
-      stopwatchTimeFrom: alarm.stopwatchTimeFrom || new Date(),
-      stopwatchTotalTime: alarm.stopwatchTotalTime || 0,
+      alarmType: 'stopwatch', description: defaults.descStopwatch, alarmState: 'disabled',
+      stopwatchTotalTime: 0,
     })
-    this.setState({edit: 'stopwatch'})
-    this.props.rerenderApp()
+    this.props.updateAlarmInstance(alarm)
   }
 
   render() {
     const { alarm, currentTime, addSecondsToNow } = this.props
-    const { edit } = this.state
-    // console.log('CURRENTTIME', currentTime)
-    console.log('ALARM', alarm)
+    const { alarmType } = alarm
     return (
       <div className="edit-container">
-        <div className="alarm-type padding">
+        <div className="alarm-type padding-controls">
           <div className={"alarm-type-alarm btn-padding"
-            +(edit==='alarm'?' active':'')}
+            +(alarmType==='alarm'?' active':'')}
             onClick={() => this.setAlarm()}>Alarm</div>
 
           <div className={"alarm-type-timer btn-padding"
-            +(edit==='timer'?' active':'')}
+            +(alarmType==='timer'?' active':'')}
             onClick={() => this.setTimer()}>Timer</div>
 
           <div className={"alarm-type-stopwatch btn-padding btn-last"
-            +(edit==='stopwatch'?' active':'')}
+            +(alarmType==='stopwatch'?' active':'')}
             onClick={() => this.setStopwatch()}>Stopwatch</div>
         </div>
 
-
-        {/* Alarm */}
-        {edit === 'alarm' &&
         <div className="edit__section padding">
           <div className="edit__block">Description</div>
 
           <input type="text" autoComplete="off" className="" value={alarm.description}
-            onChange={e => this.props.updateAlarm('description', e.target.value)} />
+            onChange={e => this.props.updateAlarmKey('description', e.target.value)} />
+        </div>
 
-          <div className="edit__block">Alarm time</div>
 
-          <DatePicker value={alarm.timeToActivate.toLocalISOString()} showClearButton={false}
+        {/* Alarm */}
+        {alarmType === 'alarm' &&
+        <div className="edit__section padding">
+          <div className="edit__block">Alarm time:</div>
+
+          <DatePicker value={alarm.timeToActivate.toLocalISOString()}
+            showClearButton={false}
             onChange={(value: string) =>
               this.updateDate('timeToActivate', alarm.timeToActivate, value)} />
 
@@ -308,21 +297,27 @@ export default class EditAlarm extends React.Component<Props, State> {
             <input type="number" min="1" max="10000" value={alarm.repeatCountdown}
               onChange={e => {
                 if (+e.target.value >= +e.target.min && +e.target.value <= +e.target.max) {
-                  this.props.updateAlarm('repeatCountdown', e.target.value)
+                  this.props.updateAlarmKey('repeatCountdown', +e.target.value)
               }}}
             />
 
             <div className="edit__inline-text">day from</div>
-            {this.getDateFromDate(alarm.timeToActivate)}
+
+            <DatePicker value={alarm.repeatFrom.toLocalISOString()} showClearButton={false}
+              onChange={(value: string) =>
+                this.updateDate('repeatFrom', alarm.repeatFrom, value)} />
           </div>
         </div>}
 
 
         {/* Timer */}
-        {edit === 'timer' &&
+        {alarmType === 'timer' &&
         <div className="edit__section padding">
-          <div className="edit__block">Time from: {this.getDateStringFromDate(currentTime)}</div>
-          <div className="edit__block">Time to wait</div>
+          <div className="edit__block">Time from: {alarm.timerTimeFrom ?
+            this.getDateStringFromDate(alarm.timerTimeFrom) :
+            this.getDateStringFromDate(currentTime)}
+          </div>
+          <div className="edit__block">Time to wait:</div>
 
           <input type="number" min="0" max="10000"
             value={this.getDaysTimerTimeToWait(alarm.timerTimeToWait)}
@@ -346,32 +341,49 @@ export default class EditAlarm extends React.Component<Props, State> {
           />
 
           <div className="edit__block">Timer will activate: {
-            this.getDateStringFromDate(addSecondsToNow(alarm.timerTimeToWait))}</div>
+            this.getDateStringFromDate(addSecondsToNow(alarm.timerTimeToWaitCountdown))}</div>
+
+          <div className="edit__block">
+            <input type="checkbox" id="repeat-timer"
+              checked={alarm.repeatType === 'timer'}
+              onChange={() => {
+                if (alarm.repeatType !== 'timer') {
+                  this.props.updateAlarmKey('repeatType', 'timer')
+                } else {
+                  this.props.updateAlarmKey('repeatType', 'once')
+                }
+              }}
+            />
+            <label htmlFor="repeat-timer">Auto restart timer</label>
+          </div>
         </div>}
 
 
         {/* Stopwatch */}
-        {edit === 'stopwatch' &&
+        {alarmType === 'stopwatch' &&
         <div className="edit__section padding">
-          <div className="edit__block">Current time is:</div>
+          <div className="edit__block">Current time:</div>
           <div className="edit__block">{this.getDateStringFromDate(currentTime)}</div>
 
-          <div className="edit__inline-text">Enable stopwatch</div>
-
           <div className="edit__block">First activation time:</div>
-          <div className="edit__block">{this.getDateStringFromDate(alarm.stopwatchTimeFrom)}</div>
+          <div className="edit__block">{alarm.stopwatchTimeFrom ?
+            this.getDateStringFromDate(alarm.stopwatchTimeFrom) :
+            'Stopwatch has not been activated'}
+          </div>
 
           <div className="edit__block">Total time:</div>
-          <div className="edit__block">{this.props.toDDHHmmss(alarm.stopwatchTotalTime)}</div>
+          <div className="edit__block">
+            {this.props.toDDHHmmss(alarm.stopwatchTotalTime, alarmType)}
+          </div>
         </div>}
 
 
         {/* Sound */}
-        {(edit === 'alarm' || edit === 'timer') &&
+        {(alarmType === 'alarm' || alarmType === 'timer') &&
         <div className="edit__section">
           <div className="edit__block">
             <input type="checkbox" id="play-sound" checked={alarm.playSound}
-              onChange={() => this.props.updateAlarm('playSound', !alarm.playSound)} />
+              onChange={() => this.props.updateAlarmKey('playSound', !alarm.playSound)} />
             <label htmlFor="play-sound">Play sound</label>
           </div>
 
@@ -380,30 +392,47 @@ export default class EditAlarm extends React.Component<Props, State> {
 
           <div className="edit__block">
             <input type="checkbox" id="repeat-sound" checked={alarm.repeatSound}
-              onChange={() => this.props.updateAlarm('repeatSound', !alarm.repeatSound)} />
+              onChange={() => this.props.updateAlarmKey('repeatSound', !alarm.repeatSound)} />
             <label htmlFor="repeat-sound">Repeat sound</label>
           </div>
         </div>}
 
 
         {/* Command */}
-        {(edit === 'alarm' || edit === 'timer') &&
+        {(alarmType === 'alarm' || alarmType === 'timer') &&
         <div className="edit__section padding">
           <div className="edit__block">
             <input type="checkbox" id="start-application" checked={alarm.startApplication}
-              onChange={() => this.props.updateAlarm('startApplication', !alarm.startApplication)} />
+              onChange={() => this.props.updateAlarmKey('startApplication', !alarm.startApplication)} />
             <label htmlFor="start-application">Start application</label>
           </div>
 
           <div className="edit__block">
             <input type="checkbox" id="auto-stop-alarm" checked={alarm.autoStopAlarm}
-              onChange={() => this.props.updateAlarm('autoStopAlarm', !alarm.autoStopAlarm)} />
+              onChange={() => this.props.updateAlarmKey('autoStopAlarm', !alarm.autoStopAlarm)} />
             <label htmlFor="auto-stop-alarm">Stop alarm automatically</label>
           </div>
 
           <div className="edit__block">Command</div>
           <input type="text" autoComplete="off" className="" value={alarm.applicationCommand}
-            onChange={(e) => this.props.updateAlarm('applicationCommand', e.target.value)} />
+            onChange={(e) => this.props.updateAlarmKey('applicationCommand', e.target.value)} />
+        </div>}
+
+
+        {(alarmType === 'timer' || alarmType === 'stopwatch') &&
+        <div className="edit__section-row padding">
+
+          {(alarm.alarmState === 'enabled' && alarmType === 'timer') &&
+          <div className="edit__btn reset"
+            onClick={() => this.props.runCustomAlarmHandler('resetTimer', [true])}></div>}
+
+          {(alarm.alarmState === 'enabled' && alarmType === 'stopwatch') &&
+          <div className="edit__btn reset"
+            onClick={() => this.props.runCustomAlarmHandler('resetStopwatch')}></div>}
+
+          <div className={"edit__btn "+
+            this.props.getAlarmHandlerClass(alarm.alarmState)}
+            onClick={() => this.props.runAlarmHandler(alarmType, alarm.alarmState)}></div>
         </div>}
       </div>
     )

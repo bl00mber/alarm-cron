@@ -1,3 +1,6 @@
+$shadow: #0000001f;
+$border: #b3c5d6;
+
 body {
   font-family: 'Roboto', sans-serif;
   font-size: 15px;
@@ -5,27 +8,53 @@ body {
 
 div {
   display: flex;
-  border: 1px solid black;
+  // border: 1px solid black;
 }
 
 .padding {
   padding: 10px 15px;
 }
 
-.btn {
+.padding-controls {
+  padding: 15px 15px;
+}
+
+.btn, .btn-padding, .alarm-container {
   cursor: pointer;
+}
+
+.btn {
   width: 30px;
   height: 30px;
   margin-right: 10px;
 }
 
 .btn-padding {
-  cursor: pointer;
   padding: 10px 15px;
   margin-right: 15px;
   border-radius: 7px;
   background: #fff;
-  box-shadow: 0 2px 15px #0000001f;
+  box-shadow: 0 2px 15px $shadow;
+}
+
+.btn, .alarm-handler__btn, .btn-padding, .edit__btn {
+  &:active {
+    box-shadow: inset 0 2px 15px $shadow;
+  }
+}
+
+.alarm-handler__btn {
+  border-radius: 0 8px 8px 0;
+  // Test
+  &.pause {
+    background: orange;
+  }
+  &.enable {
+    background: green;
+  }
+  &.reset {
+    background: red;
+  }
 }
 
 .btn-last {
@@ -36,12 +65,52 @@ div {
   flex-direction: column;
 }
 
-.settings-footer {
-  justify-content: flex-end;
+.alarms-list {
+  max-height: 85vh;
+  overflow-y: auto;
 }
 
 .alarm-container {
-  cursor: pointer;
+  min-height: fit-content;
+  margin: 10px;
+  margin-top: 0;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px $shadow;
+}
+
+.alarms-controls {
+  background: #f9f9fd;
+}
+
+.alarm-type {
+  border-bottom: 1px solid $border;
+  margin-bottom: 5px;
+}
+
+.settings-footer {
+  justify-content: flex-end;
+  border-top: 1px solid $border;
+  margin-top: 10px;
+}
+
+.alarm-countdown, .alarm-description {
+  justify-content: center;
+}
+
+.alarm-countdown {
+  max-width: 130px;
+}
+
+.alarm-select-container {
+  flex-grow: 1;
+}
+
+.alarm-description {
+  align-items: center;
+  flex-grow: 1;
+}
+
+.alarm-container {
   &.active {
     background: #dadada;
   }
