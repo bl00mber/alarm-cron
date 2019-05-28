@@ -177,7 +177,16 @@ export default class AlarmApp extends React.Component<any, State> {
 
   toDDMMHHmmss (date: Date): string {
     const month = date.toLocaleString('en-us', { month: 'short' })
-    return date.getDate()+' '+month+' '+date.toLocalISOString().slice(11,19)
+    const day = date.getDate()
+    // do not show current day/month
+    const { currentTime } = this.state
+    const curMonth = currentTime.toLocaleString('en-us', { month: 'short' })
+    const curDay = currentTime.getDate()
+    if (day === curDay && month === curMonth) {
+      return date.toLocalISOString().slice(11,19)
+    } else {
+      return day+' '+month+' '+date.toLocalISOString().slice(11,19)
+    }
   }
 
   toDDHHmmss (ssTotal: number, alarmType: AlarmType): string {
@@ -403,8 +412,6 @@ export default class AlarmApp extends React.Component<any, State> {
           case 'disabled': return 'enableStopwatch'
         }
         break
-      default:
-        console.error('wrong alarm state')
     }
   }
 
@@ -422,7 +429,12 @@ export default class AlarmApp extends React.Component<any, State> {
     alarms.forEach((alarm, index) => {
       if (alarm.alarmState === 'active') {
         const updAlarm = cloneDeep(alarms[index])
-        updAlarm.resetAlarm()
+        if (alarm.alarmType === 'alarm') {
+          updAlarm.resetAlarm()
+        }
+        else if (alarm.alarmType === 'timer') {
+          updAlarm.resetTimer()
+        }
         alarms[index] = updAlarm
       }
     })
@@ -456,9 +468,9 @@ export default class AlarmApp extends React.Component<any, State> {
               <div className="new-alarm btn"
                 onClick={this.setDefaultAlarm}></div>
               <div className={"edit-alarm btn" + (editIsEnabled ? ' active': '')}
-                onClick={() => this.setState({
+                onClick={() =>  this.setState({
                   editIsEnabled: !editIsEnabled,
-                  selectedAlarmIndex: undefined,
+                  selectedAlarmIndex: editIsEnabled ? null : selectedAlarmIndex,
                 })}></div>
               <div className="delete-alarm btn btn-last"
                 onClick={this.deleteSelectedAlarmIndex}></div>
@@ -491,9 +503,9 @@ export default class AlarmApp extends React.Component<any, State> {
             runCustomAlarmHandler={this.runCustomAlarmHandler}
             getAlarmHandlerClass={this.getAlarmHandlerClass}
           />
-          <div className="settings-footer padding-controls">
-            <div className="app-settings btn-padding">Settings</div>
-            <div className="app-about btn-padding btn-last">About</div>
+          <div className="settings-footer padding">
+            <a className="credentials"
+              href="https://github.com/bl00mber/alarm">Nick Reiley (c) 2019</a>
           </div>
         </div>}
       </div>

@@ -200,7 +200,7 @@ export default class Alarm implements AlarmFields {
   }
 
   postponeTimer (offset: number) {
-    this.timerTimeToWait += offset
+    this.timerTimeToWaitCountdown += offset
     this.alarmState = 'enabled'
   }
 

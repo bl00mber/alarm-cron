@@ -17,6 +17,7 @@ import Alarm from '../classes/Alarm'
 import { AlarmType, AlarmStateType, RepeatType, Week, DefaultFields } from '../types/alarm'
 
 import '../style/EditAlarm.scss'
+import '../style/react-bootstrap-date-picker.css'
 
 interface Props {
   alarm: Alarm,
@@ -31,7 +32,21 @@ interface Props {
   getAlarmHandlerClass: (alarmState: AlarmStateType) => string,
 }
 
-export default class EditAlarm extends React.Component<Props, any> {
+interface State {
+  cursorOverCalendar: boolean,
+}
+
+export default class EditAlarm extends React.Component<Props, State> {
+  state = {
+    cursorOverCalendar: false,
+  }
+
+  // disable rerender when cursor is over calendar to
+  // prevent calendar close when time is updated
+  shouldComponentUpdate(nextProps: Props, nextState: State) {
+    if (nextState.cursorOverCalendar) return false
+    return true
+  }
 
   localToGlobalISOString = (localISOString: string): string => {
     const dateUTC = new Date(localISOString)
@@ -251,21 +266,27 @@ export default class EditAlarm extends React.Component<Props, any> {
         <div className="alarm-type padding-controls">
           <div className={"alarm-type-alarm btn-padding"
             +(alarmType==='alarm'?' active':'')}
-            onClick={() => this.setAlarm()}>Alarm</div>
+            onClick={() => {
+              alarmType !== 'alarm' && this.setAlarm()
+            }}>Alarm</div>
 
           <div className={"alarm-type-timer btn-padding"
             +(alarmType==='timer'?' active':'')}
-            onClick={() => this.setTimer()}>Timer</div>
+            onClick={() => {
+              alarmType !== 'timer' && this.setTimer()
+            }}>Timer</div>
 
           <div className={"alarm-type-stopwatch btn-padding btn-last"
             +(alarmType==='stopwatch'?' active':'')}
-            onClick={() => this.setStopwatch()}>Stopwatch</div>
+            onClick={() => {
+              alarmType !== 'stopwatch' && this.setStopwatch()
+            }}>Stopwatch</div>
         </div>
 
         <div className="edit__section padding">
-          <div className="edit__block">Description</div>
+          <div className="edit__block margin-bottom">Description</div>
 
-          <input type="text" autoComplete="off" className="" value={alarm.description}
+          <input type="text" autoComplete="off" className="margin-bottom" value={alarm.description}
             onChange={e => this.props.updateAlarmKey('description', e.target.value)} />
         </div>
 
@@ -273,39 +294,56 @@ export default class EditAlarm extends React.Component<Props, any> {
         {/* Alarm */}
         {alarmType === 'alarm' &&
         <div className="edit__section padding">
-          <div className="edit__block">Alarm time:</div>
+          <div className="edit__block margin-bottom">Alarm time</div>
 
-          <DatePicker value={alarm.timeToActivate.toLocalISOString()}
-            showClearButton={false}
-            onChange={(value: string) =>
-              this.updateDate('timeToActivate', alarm.timeToActivate, value)} />
+          <div className="edit__block margin-bottom">
+            <DatePicker
+              value={alarm.timeToActivate.toLocalISOString()}
+              className="datepicker margin-right"
+              showClearButton={false}
+              onChange={(value: string) =>
+                this.updateDate('timeToActivate', alarm.timeToActivate, value)}
+              onFocus={() => this.setState({ cursorOverCalendar: true })}
+              onBlur={() => this.setState({ cursorOverCalendar: false })}
+            />
 
-          <TimeField
-            value={this.getTimeFromDate(alarm.timeToActivate)}
-            onChange={(value: string) =>
-              this.updateTime('timeToActivate', alarm.timeToActivate, value)}
-            input={<input className='edit__time-input' autoComplete="off" />}
-          />
+            <TimeField
+              value={this.getTimeFromDate(alarm.timeToActivate)}
+              className="timepicker"
+              onChange={(value: string) =>
+                this.updateTime('timeToActivate', alarm.timeToActivate, value)}
+              input={<input className='edit__time-input' autoComplete="off" />}
+            />
+          </div>
 
-          <div className="edit__block">Repeat: {this.getRepeatString()}</div>
+          <div className="edit__block margin-bottom">Repeat: {this.getRepeatString()}</div>
           <div className="edit__block">{this.weekJSX(alarm.repeatDaysOfWeek, alarm.repeatType)}</div>
-          <div className="edit__block">
+          <div className="edit__block align-center">
             <input type="checkbox" id="repeat-type" checked={alarm.repeatType === 'countdown'}
               onChange={() => this.updateRepeatType(true)} />
-            <label htmlFor="repeat-type">Every</label>
+            <label htmlFor="repeat-type"
+              className="margin-right">Every</label>
 
-            <input type="number" min="1" max="10000" value={alarm.repeatCountdown}
+            <input type="number" min="1" max="10000"
+              className="daypicker margin-right"
+              value={alarm.repeatCountdown}
               onChange={e => {
                 if (+e.target.value >= +e.target.min && +e.target.value <= +e.target.max) {
                   this.props.updateAlarmKey('repeatCountdown', +e.target.value)
               }}}
             />
 
-            <div className="edit__inline-text">day from</div>
+            <div className="edit__inline-text margin-right">day from</div>
 
-            <DatePicker value={alarm.repeatFrom.toLocalISOString()} showClearButton={false}
+            <DatePicker
+              value={alarm.repeatFrom.toLocalISOString()}
+              className="datepicker"
+              showClearButton={false}
               onChange={(value: string) =>
-                this.updateDate('repeatFrom', alarm.repeatFrom, value)} />
+                this.updateDate('repeatFrom', alarm.repeatFrom, value)}
+              onFocus={() => this.setState({ cursorOverCalendar: true })}
+              onBlur={() => this.setState({ cursorOverCalendar: false })}
+            />
           </div>
         </div>}
 
@@ -313,32 +351,36 @@ export default class EditAlarm extends React.Component<Props, any> {
         {/* Timer */}
         {alarmType === 'timer' &&
         <div className="edit__section padding">
-          <div className="edit__block">Time from: {alarm.timerTimeFrom ?
+          <div className="edit__block margin-bottom">Time from: {alarm.timerTimeFrom ?
             this.getDateStringFromDate(alarm.timerTimeFrom) :
             this.getDateStringFromDate(currentTime)}
           </div>
-          <div className="edit__block">Time to wait:</div>
+          <div className="edit__block margin-bottom">Time to wait</div>
 
-          <input type="number" min="0" max="10000"
-            value={this.getDaysTimerTimeToWait(alarm.timerTimeToWait)}
-            onChange={e => {
-              if (+e.target.value >= +e.target.min && +e.target.value <= +e.target.max) {
-                // do not allow to set 0 days when time === '00:00'
-                if (e.target.value === '0' &&
-                  this.getTimeTimerTimeToWait(alarm.timerTimeToWait) === '00:00') return;
-                this.updateDaysTimerTimeToWait(alarm.timerTimeToWait, +e.target.value)
-            }}}
-          />
+          <div className="edit__block align-center margin-bottom">
+            <input type="number" min="0" max="10000"
+              className="daypicker margin-right"
+              value={this.getDaysTimerTimeToWait(alarm.timerTimeToWait)}
+              onChange={e => {
+                if (+e.target.value >= +e.target.min && +e.target.value <= +e.target.max) {
+                  // do not allow to set 0 days when time === '00:00'
+                  if (e.target.value === '0' &&
+                    this.getTimeTimerTimeToWait(alarm.timerTimeToWait) === '00:00') return;
+                  this.updateDaysTimerTimeToWait(alarm.timerTimeToWait, +e.target.value)
+              }}}
+            />
 
-          <div className="edit__block">D</div>
+            <div className="edit__block margin-right">D</div>
 
-          <TimeField
-            value={this.getTimeTimerTimeToWait(alarm.timerTimeToWait)}
-            onChange={(value: string) => {
-              this.updateTimeTimerTimeToWait(alarm.timerTimeToWait, value)
-            }}
-            input={<input className='edit__time-input' autoComplete="off" />}
-          />
+            <TimeField
+              value={this.getTimeTimerTimeToWait(alarm.timerTimeToWait)}
+              className="timepicker"
+              onChange={(value: string) => {
+                this.updateTimeTimerTimeToWait(alarm.timerTimeToWait, value)
+              }}
+              input={<input className='edit__time-input' autoComplete="off" />}
+            />
+          </div>
 
           <div className="edit__block">Timer will activate: {
             this.getDateStringFromDate(addSecondsToNow(alarm.timerTimeToWaitCountdown))}</div>
@@ -362,38 +404,31 @@ export default class EditAlarm extends React.Component<Props, any> {
         {/* Stopwatch */}
         {alarmType === 'stopwatch' &&
         <div className="edit__section padding">
-          <div className="edit__block">Current time:</div>
-          <div className="edit__block">{this.getDateStringFromDate(currentTime)}</div>
+          <div className="edit__block margin-bottom">Current time: {this.getDateStringFromDate(currentTime)}</div>
 
-          <div className="edit__block">First activation time:</div>
-          <div className="edit__block">{alarm.stopwatchTimeFrom ?
+          <div className="edit__block margin-bottom">Activation time: {alarm.stopwatchTimeFrom ?
             this.getDateStringFromDate(alarm.stopwatchTimeFrom) :
-            'Stopwatch has not been activated'}
-          </div>
+            'hasn\'t been activated'}</div>
 
-          <div className="edit__block">Total time:</div>
-          <div className="edit__block">
-            {this.props.toDDHHmmss(alarm.stopwatchTotalTime, alarmType)}
-          </div>
+          <div className="edit__block margin-bottom">Total time: {this.props.toDDHHmmss(alarm.stopwatchTotalTime, alarmType)}</div>
         </div>}
 
 
         {/* Sound */}
         {(alarmType === 'alarm' || alarmType === 'timer') &&
-        <div className="edit__section">
+        <div className="edit__section padding">
           <div className="edit__block">
             <input type="checkbox" id="play-sound" checked={alarm.playSound}
               onChange={() => this.props.updateAlarmKey('playSound', !alarm.playSound)} />
             <label htmlFor="play-sound">Play sound</label>
-          </div>
 
-          <div className="edit__block">
-          </div>
-
-          <div className="edit__block">
             <input type="checkbox" id="repeat-sound" checked={alarm.repeatSound}
               onChange={() => this.props.updateAlarmKey('repeatSound', !alarm.repeatSound)} />
             <label htmlFor="repeat-sound">Repeat sound</label>
+          </div>
+
+          <div className="edit__block">
+
           </div>
         </div>}
 
@@ -405,34 +440,33 @@ export default class EditAlarm extends React.Component<Props, any> {
             <input type="checkbox" id="start-application" checked={alarm.startApplication}
               onChange={() => this.props.updateAlarmKey('startApplication', !alarm.startApplication)} />
             <label htmlFor="start-application">Start application</label>
-          </div>
 
-          <div className="edit__block">
             <input type="checkbox" id="auto-stop-alarm" checked={alarm.autoStopAlarm}
               onChange={() => this.props.updateAlarmKey('autoStopAlarm', !alarm.autoStopAlarm)} />
             <label htmlFor="auto-stop-alarm">Stop alarm automatically</label>
           </div>
 
-          <div className="edit__block">Command</div>
-          <input type="text" autoComplete="off" className="" value={alarm.applicationCommand}
+          <div className="edit__block margin-bottom">Command</div>
+          <input type="text" autoComplete="off" className="margin-bottom" value={alarm.applicationCommand}
             onChange={(e) => this.props.updateAlarmKey('applicationCommand', e.target.value)} />
         </div>}
 
 
         {(alarmType === 'timer' || alarmType === 'stopwatch') &&
-        <div className="edit__section-row padding">
+        <div className="edit__section padding">
+          <div className="edit__block">
+            <div className={"edit__btn margin-right "+
+              this.props.getAlarmHandlerClass(alarm.alarmState)}
+              onClick={() => this.props.runAlarmHandler(alarmType, alarm.alarmState)}></div>
 
-          {(alarm.alarmState === 'enabled' && alarmType === 'timer') &&
-          <div className="edit__btn reset"
-            onClick={() => this.props.runCustomAlarmHandler('resetTimer', [true])}></div>}
+            {(alarm.alarmState === 'enabled' && alarmType === 'timer') &&
+            <div className="edit__btn reset"
+              onClick={() => this.props.runCustomAlarmHandler('resetTimer', [true])}></div>}
 
-          {(alarm.alarmState === 'enabled' && alarmType === 'stopwatch') &&
-          <div className="edit__btn reset"
-            onClick={() => this.props.runCustomAlarmHandler('resetStopwatch')}></div>}
-
-          <div className={"edit__btn "+
-            this.props.getAlarmHandlerClass(alarm.alarmState)}
-            onClick={() => this.props.runAlarmHandler(alarmType, alarm.alarmState)}></div>
+            {(alarm.alarmState === 'enabled' && alarmType === 'stopwatch') &&
+            <div className="edit__btn reset"
+              onClick={() => this.props.runCustomAlarmHandler('resetStopwatch')}></div>}
+          </div>
         </div>}
       </div>
     )
