@@ -9,6 +9,7 @@ const ROOT_PATH = path.resolve(__dirname)
 
 const common = {
   entry: path.resolve(ROOT_PATH, 'renderer', 'renderer.tsx'),
+  target: 'electron-renderer',
   resolve: {
     extensions: ['.js', '.jsx', '.ts', '.tsx'],
     modules: ['node_modules']

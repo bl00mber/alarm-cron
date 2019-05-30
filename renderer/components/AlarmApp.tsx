@@ -7,6 +7,7 @@
 */
 
 import * as React from 'react'
+import { remote } from 'electron'
 // @ts-ignore
 import cloneDeep from 'lodash.clonedeep'
 import EditAlarm from './EditAlarm'
@@ -16,38 +17,7 @@ import { DefaultFields, AlarmType, AlarmStateType,
 
 import '../style/AlarmApp.scss'
 
-declare global {
-  interface Date {
-    toLocalISOString(): string;
-  }
-  interface String {
-    capitalize(): string;
-  }
-}
-
-Date.prototype.toLocalISOString = function() {
-  let tzo = -this.getTimezoneOffset(),
-    dif = tzo >= 0 ? '+' : '-',
-    pad = function(num: number) {
-      let norm = Math.floor(Math.abs(num));
-      return (norm < 10 ? '0' : '') + norm;
-    };
-  return this.getFullYear() +
-    '-' + pad(this.getMonth() + 1) +
-    '-' + pad(this.getDate()) +
-    'T' + pad(this.getHours()) +
-    ':' + pad(this.getMinutes()) +
-    ':' + pad(this.getSeconds()) +
-    dif + pad(tzo / 60) +
-    ':' + pad(tzo % 60);
-}
-
-String.prototype.capitalize = function() {
-  return this.charAt(0).toUpperCase() + this.slice(1)
-}
-
-// Defaults, needs to be placed into app/settings
-const defaults: DefaultFields = {
+const defaults: DefaultFields = { // needs to be placed into app/settings
   alarmType: 'alarm',
   descAlarm: 'Alarm',
   descTimer: 'Timer',
@@ -60,7 +30,7 @@ const defaults: DefaultFields = {
   repeatDaysOfWeek: {mon: false, tue: false, wed: false, thu: false, fri: false, sat: false, sun: false},
   repeatCountdown: 1,
   playSound: true,
-  soundPath: '', // here should be default mp3
+  soundPath: 'default.mp3',
   repeatSound: true,
   startApplication: false,
   autoStopAlarm: false,
@@ -74,6 +44,12 @@ const defaults: DefaultFields = {
   // autoDisableAlarms: false, // prod
   autoDisableAlarms: true,
   autoDisableAfterMM: 10,
+
+  listWidthPx: 330,
+  listHeightPx: 552,
+  editWidthPx: 380,
+  editHeightPx: 622,
+  fullscreenIsEnabled: false,
 }
 
 interface State {
@@ -87,7 +63,7 @@ interface State {
 export default class AlarmApp extends React.Component<any, State> {
   currentTimeInterval: NodeJS.Timeout;
 
-  constructor(props: object) {
+  constructor (props: object) {
     super(props)
 
     const alarm = new Alarm({
@@ -115,13 +91,23 @@ export default class AlarmApp extends React.Component<any, State> {
     }
   }
 
-  componentDidMount() {
+  componentDidMount () {
     this.currentTimeInterval = setInterval(() =>
       this.setState({ currentTime: new Date() }, this.alarmsHandler), 1000)
+    this.updateAppSize()
   }
 
-  componentWillUnmount() {
+  componentWillUnmount () {
     clearInterval(this.currentTimeInterval)
+  }
+
+  updateAppSize = () => {
+    let width
+    if (this.state.editIsEnabled && this.state.selectedAlarmIndex !== null)
+    { width = defaults.listWidthPx + defaults.editWidthPx }
+    else { width = defaults.listWidthPx }
+    remote.getCurrentWindow().setSize(width, defaults.editHeightPx)
+    console.log(remote.getCurrentWindow().getSize())
   }
 
   alarmsHandler = () => {
@@ -202,7 +188,8 @@ export default class AlarmApp extends React.Component<any, State> {
     if (mm < 10) {mm = '0'+mm}
     if (ss < 10) {ss = '0'+ss}
 
-    if (dd == 0) { str = hh+':'+mm+':'+ss }
+    if (dd === 0 && hh === 0) { str = mm+':'+ss }
+    else if (dd === 0) { str = hh+':'+mm+':'+ss }
     else { str = dd+'D '+hh+':'+mm+':'+ss }
     return str
   }
@@ -294,9 +281,9 @@ export default class AlarmApp extends React.Component<any, State> {
         <div className="alarm-select-container"
           onClick={() => {
             if (selectedAlarmIndex === index) {
-              this.setState({ selectedAlarmIndex: null })
+              this.setState({ selectedAlarmIndex: null }, this.updateAppSize)
             } else {
-              this.setState({ selectedAlarmIndex: index })
+              this.setState({ selectedAlarmIndex: index }, this.updateAppSize)
             }
           }}>
           <div className={this.getAlarmIconClass(alarm.alarmType)}></div>
@@ -312,7 +299,7 @@ export default class AlarmApp extends React.Component<any, State> {
   }
 
   // Modification controls handlers
-  setDefaultAlarm = () => {
+  addDefaultAlarm = () => {
     const alarm = new Alarm({
       alarmType: defaults.alarmType, description: defaults.descAlarm, alarmState: defaults.alarmState,
       timeToActivate: this.addSecondsToNow(defaults.defaultOffset),
@@ -458,7 +445,7 @@ export default class AlarmApp extends React.Component<any, State> {
     this.setState({ alarms })
   }
 
-  render() {
+  render () {
     const { alarms, currentTime, selectedAlarmIndex, editIsEnabled } = this.state
     return (
       <div className="app-container">
@@ -466,12 +453,12 @@ export default class AlarmApp extends React.Component<any, State> {
           <div className="alarms-controls">
             <div className="alarms-modification-controls padding-controls">
               <div className="new-alarm btn"
-                onClick={this.setDefaultAlarm}></div>
+                onClick={this.addDefaultAlarm}></div>
               <div className={"edit-alarm btn" + (editIsEnabled ? ' active': '')}
-                onClick={() =>  this.setState({
+                onClick={() => this.setState({
                   editIsEnabled: !editIsEnabled,
                   selectedAlarmIndex: editIsEnabled ? null : selectedAlarmIndex,
-                })}></div>
+                }, this.updateAppSize)}></div>
               <div className="delete-alarm btn btn-last"
                 onClick={this.deleteSelectedAlarmIndex}></div>
             </div>
@@ -484,13 +471,15 @@ export default class AlarmApp extends React.Component<any, State> {
             </div>
           </div>
 
-          <div className="alarms-list">
+          <div className="alarms-list" style={{
+            width: defaults.listWidthPx+'px', height: defaults.listHeightPx+'px'}}>
             {(alarms.length > 0) && this.alarmsJSX()}
           </div>
         </div>
 
         {(editIsEnabled && selectedAlarmIndex !== null) &&
-        <div className="settings-container">
+        <div className="settings-container" style={{
+          width: defaults.editWidthPx+'px', height: defaults.editHeightPx+'px'}}>
           <EditAlarm
             alarm={alarms[selectedAlarmIndex]}
             defaults={defaults}
@@ -504,8 +493,14 @@ export default class AlarmApp extends React.Component<any, State> {
             getAlarmHandlerClass={this.getAlarmHandlerClass}
           />
           <div className="settings-footer padding">
-            <a className="credentials"
-              href="https://github.com/bl00mber/alarm">Nick Reiley (c) 2019</a>
+            <a className="copyright" target="_blank"
+              href="https://github.com/bl00mber/alarm"
+              onClick={e => {
+                event.preventDefault()
+                // @ts-ignore
+                let url = e.target.href
+                require('electron').shell.openExternal(url)
+              }}>Nick Reiley (c) 2019</a>
           </div>
         </div>}
       </div>

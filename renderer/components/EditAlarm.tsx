@@ -43,7 +43,7 @@ export default class EditAlarm extends React.Component<Props, State> {
 
   // disable rerender when cursor is over calendar to
   // prevent calendar close when time is updated
-  shouldComponentUpdate(nextProps: Props, nextState: State) {
+  shouldComponentUpdate (nextProps: Props, nextState: State) {
     if (nextState.cursorOverCalendar) return false
     return true
   }
@@ -235,6 +235,7 @@ export default class EditAlarm extends React.Component<Props, State> {
       updatedTimerTimeToWait = remainder
     }
     this.props.updateAlarmKey('timerTimeToWait', updatedTimerTimeToWait)
+    this.props.updateAlarmKey('timerTimeToWaitCountdown', updatedTimerTimeToWait)
   }
 
   updateTimeTimerTimeToWait = (timerTimeToWait: number, time: string) => {
@@ -245,6 +246,7 @@ export default class EditAlarm extends React.Component<Props, State> {
     const days = Math.floor(timerTimeToWait/86400)
     const updatedTimerTimeToWait = (days === 0) ? remainder : (86400*days + remainder)
     this.props.updateAlarmKey('timerTimeToWait', updatedTimerTimeToWait)
+    this.props.updateAlarmKey('timerTimeToWaitCountdown', updatedTimerTimeToWait)
   }
 
   // Stopwatch
@@ -258,8 +260,8 @@ export default class EditAlarm extends React.Component<Props, State> {
     this.props.updateAlarmInstance(alarm)
   }
 
-  render() {
-    const { alarm, currentTime, addSecondsToNow } = this.props
+  render () {
+    const { alarm, defaults, currentTime, addSecondsToNow } = this.props
     const { alarmType } = alarm
     return (
       <div className="edit-container">
@@ -337,7 +339,7 @@ export default class EditAlarm extends React.Component<Props, State> {
 
             <DatePicker
               value={alarm.repeatFrom.toLocalISOString()}
-              className="datepicker"
+              className="datepicker moved"
               showClearButton={false}
               onChange={(value: string) =>
                 this.updateDate('repeatFrom', alarm.repeatFrom, value)}
@@ -416,7 +418,7 @@ export default class EditAlarm extends React.Component<Props, State> {
 
         {/* Sound */}
         {(alarmType === 'alarm' || alarmType === 'timer') &&
-        <div className="edit__section padding">
+        <div className="edit__section padding margin-bottom">
           <div className="edit__block">
             <input type="checkbox" id="play-sound" checked={alarm.playSound}
               onChange={() => this.props.updateAlarmKey('playSound', !alarm.playSound)} />
@@ -428,7 +430,13 @@ export default class EditAlarm extends React.Component<Props, State> {
           </div>
 
           <div className="edit__block">
-
+            <div className="sound-upload">
+              <div className="sound-btn">Select sound to play</div>
+              <input type="file" name="sound-file" />
+              <div className="sound-path">{
+                alarm.soundPath.split('/').pop() ||
+                defaults.soundPath.split('/').pop()}</div>
+            </div>
           </div>
         </div>}
 
@@ -447,7 +455,9 @@ export default class EditAlarm extends React.Component<Props, State> {
           </div>
 
           <div className="edit__block margin-bottom">Command</div>
-          <input type="text" autoComplete="off" className="margin-bottom" value={alarm.applicationCommand}
+          <input type="text" autoComplete="off" className="margin-bottom"
+            disabled={!alarm.startApplication}
+            value={alarm.applicationCommand}
             onChange={(e) => this.props.updateAlarmKey('applicationCommand', e.target.value)} />
         </div>}
 

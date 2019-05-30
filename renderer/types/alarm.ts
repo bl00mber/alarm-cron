@@ -64,4 +64,10 @@ export interface DefaultFields {
   postponeOffset: number;
   autoDisableAlarms: boolean;
   autoDisableAfterMM: number;
+
+  listWidthPx: number;
+  listHeightPx: number;
+  editWidthPx: number;
+  editHeightPx: number;
+  fullscreenIsEnabled: boolean;
 }

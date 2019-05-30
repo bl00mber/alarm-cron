@@ -43,7 +43,7 @@ export default class Alarm implements AlarmFields {
   /**
    * By default class instances implements enabled Alarm.
   */
-  constructor({
+  constructor ({
     alarmType, description, alarmState, timeToActivate,
     repeatType, repeatDaysOfWeek,
     repeatCountdown, repeatFrom,
@@ -85,6 +85,9 @@ export default class Alarm implements AlarmFields {
     alarmType: AlarmType, description: string, alarmState: AlarmStateType
   }) {
     this.repeatType ='once'
+    this.repeatDaysOfWeek = {
+      mon: false, tue: false, wed: false, thu: false, fri: false, sat: false, sun: false
+    }
     Object.assign(
       this, arguments[0]
     )
@@ -110,6 +113,7 @@ export default class Alarm implements AlarmFields {
     alarmType: AlarmType, description: string, alarmState: AlarmStateType,
     stopwatchTotalTime: number
   }) {
+    this.stopwatchTimeFrom = undefined
     Object.assign(
       this, arguments[0]
     )
@@ -128,7 +132,6 @@ export default class Alarm implements AlarmFields {
 
   // new Date() -> timerTimeFrom, if not set
   enableTimer () {
-    console.log('ENABLETIMER')
     if (this.alarmState !== 'disabled') return;
     if (this.timerTimeToWaitCountdown === 0) return; // Expired
     this.timerTimeFrom = new Date()

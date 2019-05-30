@@ -1,5 +1,5 @@
 const path = require('path')
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, globalShortcut } = require('electron')
 const ApplicationMenu = require('./application-menu')
 
 app.setName('Alarm')
@@ -10,7 +10,16 @@ const applicationMenu = new ApplicationMenu()
 applicationMenu.setApplicationMenu()
 
 app.on('ready', () => {
-  mainWindow = new BrowserWindow({ devTools: true })
+  const { screen } = require('electron')
+
+  let devOptions = {}
+  if (process.env.npm_package_scripts_main.slice(9,20) === "development") {
+    devOptions = { devTools: true, resizable: true }
+  }
+  mainWindow = new BrowserWindow({
+    resizable: false,
+    webPreferences: {nodeIntegration: true},
+    ...devOptions })
 
   if (process.env.npm_package_scripts_main.slice(9,20) === "development") {
     function waitForWebpackDevServer() {
@@ -26,6 +35,10 @@ app.on('ready', () => {
       })
     }
     waitForWebpackDevServer()
+
+    globalShortcut.register('Ctrl+Shift+I', () => {
+      mainWindow.webContents.openDevTools()
+    })
   }
   else {
     mainWindow.loadURL('file://'+path.resolve(__dirname, '..', 'index.html'))
@@ -37,6 +50,9 @@ app.on('ready', () => {
     // when you should delete the corresponding element.
     mainWindow = null
   })
+
+  const { width: monitorWidth, height: monitorHeight } = screen.getPrimaryDisplay().workAreaSize
+  mainWindow.setMaximumSize(monitorWidth, monitorHeight)
 })
 
 app.on('window-all-closed', function() {
