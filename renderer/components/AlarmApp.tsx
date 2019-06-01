@@ -6,8 +6,11 @@
  * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
-import * as React from 'react'
 import { remote } from 'electron'
+const fs = require('fs')
+const exec = require('child_process').exec
+
+import * as React from 'react'
 // @ts-ignore
 import cloneDeep from 'lodash.clonedeep'
 import EditAlarm from './EditAlarm'
@@ -24,26 +27,24 @@ const defaults: DefaultFields = { // needs to be placed into app/settings
   descStopwatch: 'Stopwatch',
   alarmState: 'enabled',
 
-  defaultOffset: 600, // timeToActivate
+  timeToActivateOffset: 600,
   floorSeconds: false,
   repeatType: 'once',
   repeatDaysOfWeek: {mon: false, tue: false, wed: false, thu: false, fri: false, sat: false, sun: false},
   repeatCountdown: 1,
   playSound: true,
-  soundPath: 'default.mp3',
+  soundPath: '',
   repeatSound: true,
   startApplication: false,
   autoStopAlarm: false,
   applicationCommand: '',
 
-  // timerTimeToWait: 600, // prod
-  timerTimeToWait: 5,
+  timerTimeToWait: 600,
   stopwatchTotalTime: 0,
 
   postponeOffset: 300,
-  // autoDisableAlarms: false, // prod
-  autoDisableAlarms: true,
-  autoDisableAfterMM: 10,
+  autoStopAfterTimeIsActive: false,
+  autoStopAfterMM: 10,
 
   listWidthPx: 330,
   listHeightPx: 552,
@@ -58,6 +59,9 @@ interface State {
   alarms?: Alarm[],
   selectedAlarmIndex: number | null,
   editIsEnabled: boolean,
+  player: AudioBufferSourceNode | null,
+  cachedSoundBuffer: ArrayBuffer | null,
+  cachedSoundPath: string | null,
 }
 
 export default class AlarmApp extends React.Component<any, State> {
@@ -69,7 +73,7 @@ export default class AlarmApp extends React.Component<any, State> {
     const alarm = new Alarm({
       alarmType: defaults.alarmType, description: defaults.descAlarm,
       alarmState: defaults.alarmState,
-      timeToActivate: this.addSecondsToNow(defaults.defaultOffset),
+      timeToActivate: this.addSecondsToNow(defaults.timeToActivateOffset),
       repeatType: defaults.repeatType, repeatDaysOfWeek: defaults.repeatDaysOfWeek,
       repeatCountdown: defaults.repeatCountdown, repeatFrom: new Date(),
       playSound: defaults.playSound, soundPath: defaults.soundPath, repeatSound: defaults.repeatSound,
@@ -88,6 +92,10 @@ export default class AlarmApp extends React.Component<any, State> {
       alarms: [alarm],
       selectedAlarmIndex: 0,
       editIsEnabled: true,
+
+      player: null,
+      cachedSoundBuffer: null,
+      cachedSoundPath: null,
     }
   }
 
@@ -106,7 +114,8 @@ export default class AlarmApp extends React.Component<any, State> {
     if (this.state.editIsEnabled && this.state.selectedAlarmIndex !== null)
     { width = defaults.listWidthPx + defaults.editWidthPx }
     else { width = defaults.listWidthPx }
-    remote.getCurrentWindow().setSize(width, defaults.editHeightPx)
+    // remote.getCurrentWindow().setSize(width, defaults.editHeightPx) // prod
+    remote.getCurrentWindow().setSize(1200, 800)
     console.log(remote.getCurrentWindow().getSize())
   }
 
@@ -117,13 +126,27 @@ export default class AlarmApp extends React.Component<any, State> {
       if (alarm.alarmState === 'enabled') {
         if (alarm.alarmType === 'alarm') {
           if (currentTime.getTime() > alarm.timeToActivate.getTime()) {
-            alarm.alarmState = 'active'
+
+            if (!alarm.autoStopAlarm) {
+              alarm.alarmState = 'active'
+              if (alarm.playSound) this.playSound(alarm.soundPath, alarm.repeatSound)
+            } else {
+              alarm.resetAlarm()
+            }
+            if (alarm.startApplication) this.startApplication(alarm.applicationCommand)
           }
         }
         else if (alarm.alarmType === 'timer') {
             alarm.timerTimeToWaitCountdown -= 1
           if (alarm.timerTimeToWaitCountdown === 0) {
-            alarm.alarmState = 'active'
+
+            if (!alarm.autoStopAlarm) {
+              alarm.alarmState = 'active'
+              if (alarm.playSound) this.playSound(alarm.soundPath, alarm.repeatSound)
+            } else {
+              alarm.resetTimer()
+            }
+            if (alarm.startApplication) this.startApplication(alarm.applicationCommand)
           }
         }
         else if (alarm.alarmType === 'stopwatch') {
@@ -132,15 +155,15 @@ export default class AlarmApp extends React.Component<any, State> {
       }
 
       // Disable alarms that has been active for more than certain time without turning off
-      if (alarm.alarmState === 'active' && defaults.autoDisableAlarms) {
+      if (alarm.alarmState === 'active' && defaults.autoStopAfterTimeIsActive) {
         if (alarm.alarmType === 'alarm') {
           if (currentTime.getTime() >
-            (alarm.timeToActivate.getTime() + defaults.autoDisableAfterMM*60000)) {
+            (alarm.timeToActivate.getTime() + defaults.autoStopAfterMM*60000)) {
             alarm.resetAlarm()
           }
         }
         else if (alarm.alarmType === 'timer') {
-          if (alarm.timerTimeToWaitCountdown < defaults.autoDisableAfterMM*-60) {
+          if (alarm.timerTimeToWaitCountdown < defaults.autoStopAfterMM*-60) {
             alarm.resetTimer()
           }
         }
@@ -148,6 +171,50 @@ export default class AlarmApp extends React.Component<any, State> {
       return alarm
     })
     this.setState({ alarms: alarmsUpd })
+  }
+
+  playSound = (soundPath: string, repeatSound: boolean) => {
+    const { player, cachedSoundBuffer, cachedSoundPath } = this.state
+    if (player) player.stop()
+
+    if (cachedSoundBuffer !== null && cachedSoundPath === soundPath) {
+      const arrayBuffer = cachedSoundBuffer // check if will work without
+      this.playSoundInContext(arrayBuffer, soundPath, repeatSound)
+    }
+    else {
+      fs.exists(soundPath, (exists: boolean) => {
+        if (exists) {
+          const uint8Array = fs.readFileSync(soundPath)
+          const arrayBuffer = new Uint8Array(uint8Array).buffer
+          this.playSoundInContext(arrayBuffer, soundPath, repeatSound)
+        } else {
+          console.error('file', soundPath, 'does not exists') }
+      })
+    }
+  }
+
+  playSoundInContext = (_arrayBuffer: ArrayBuffer, soundPath: string, repeatSound: boolean) => {
+    const arrayBuffer = _arrayBuffer.slice(0) // prevents link on source object
+    const context = new AudioContext()
+    context.decodeAudioData(arrayBuffer, (audioBuffer) => {
+      const player = context.createBufferSource()
+      player.buffer = audioBuffer
+      player.connect(context.destination)
+      player.start(0, 0)
+      if (repeatSound) player.loop = true
+
+      this.setState({ player, cachedSoundBuffer: _arrayBuffer,
+        cachedSoundPath: soundPath })
+    })
+  }
+
+  startApplication = (applicationCommand: string) => {
+    try {
+      exec(applicationCommand, (err: Error, stdout: string, stderr: string) => {
+        if (err) console.log(err)
+      })
+    }
+    catch(error) { console.error(error) }
   }
 
   addSecondsToNow = (seconds: number): Date => {
@@ -162,11 +229,11 @@ export default class AlarmApp extends React.Component<any, State> {
   }
 
   toDDMMHHmmss (date: Date): string {
-    const month = date.toLocaleString('en-us', { month: 'short' })
+    const month = date.toLocaleString('en-us', {month: 'short'})
     const day = date.getDate()
     // do not show current day/month
     const { currentTime } = this.state
-    const curMonth = currentTime.toLocaleString('en-us', { month: 'short' })
+    const curMonth = currentTime.toLocaleString('en-us', {month: 'short'})
     const curDay = currentTime.getDate()
     if (day === curDay && month === curMonth) {
       return date.toLocalISOString().slice(11,19)
@@ -212,7 +279,7 @@ export default class AlarmApp extends React.Component<any, State> {
 
   repeatCountdownToStr (repeatFrom: Date, repeatCountdown: number): string {
     const day = repeatFrom.getDate()
-    const month = repeatFrom.toLocaleString('en-us', { month: 'short' })
+    const month = repeatFrom.toLocaleString('en-us', {month: 'short'})
     const year = repeatFrom.getFullYear()
     return 'Every '+Number(repeatCountdown)+' day from '+day+' '+month+' '+year
   }
@@ -272,7 +339,7 @@ export default class AlarmApp extends React.Component<any, State> {
   }
 
   alarmsJSX = (): React.ReactElement<{}>[] => {
-    const { alarms, selectedAlarmIndex } = this.state
+    const { alarms, selectedAlarmIndex, player } = this.state
     const alarmsJSX: React.ReactElement<{}>[] = []
 
     alarms.map((alarm: Alarm, index: number) => {
@@ -288,11 +355,16 @@ export default class AlarmApp extends React.Component<any, State> {
           }}>
           <div className={this.getAlarmIconClass(alarm.alarmType)}></div>
           {this.alarmCountdownsJSX(alarm.alarmType, alarm)}
-          <div className="alarm-description padding">{alarm.description}</div>
+          <div className="alarm-description padding" style={
+            (alarm.repeatType!=='once')?
+            {maxWidth: '140px'}:{}}>{alarm.description}</div>
         </div>
         <div className={"alarm-handler__btn padding "+
           this.getAlarmHandlerClass(alarm.alarmState)}
-          onClick={() => this.runAlarmHandler(alarm.alarmType, alarm.alarmState, index)}></div>
+          onClick={() => {
+            if (alarm.alarmState === 'active' && player) player.stop()
+            this.runAlarmHandler(alarm.alarmType, alarm.alarmState, index)
+          }}></div>
       </div>
     )})
     return alarmsJSX
@@ -302,7 +374,7 @@ export default class AlarmApp extends React.Component<any, State> {
   addDefaultAlarm = () => {
     const alarm = new Alarm({
       alarmType: defaults.alarmType, description: defaults.descAlarm, alarmState: defaults.alarmState,
-      timeToActivate: this.addSecondsToNow(defaults.defaultOffset),
+      timeToActivate: this.addSecondsToNow(defaults.timeToActivateOffset),
       repeatType: defaults.repeatType, repeatDaysOfWeek: defaults.repeatDaysOfWeek,
       repeatCountdown: defaults.repeatCountdown, repeatFrom: new Date(),
       playSound: defaults.playSound, soundPath: defaults.soundPath, repeatSound: defaults.repeatSound,
@@ -412,7 +484,9 @@ export default class AlarmApp extends React.Component<any, State> {
 
   // Process all alarms
   resetAllActiveAlarms = () => {
-    const { alarms } = this.state
+    const { alarms, player } = this.state
+    if (player) player.stop()
+
     alarms.forEach((alarm, index) => {
       if (alarm.alarmState === 'active') {
         const updAlarm = cloneDeep(alarms[index])
@@ -429,7 +503,9 @@ export default class AlarmApp extends React.Component<any, State> {
   }
 
   postponeAllActiveAlarms = () => {
-    const { alarms } = this.state
+    const { alarms, player } = this.state
+    if (player) player.stop()
+
     alarms.forEach((alarm, index) => {
       if (alarm.alarmState === 'active' &&
         alarm.alarmType === 'alarm' || alarm.alarmType === 'timer') {
@@ -446,7 +522,7 @@ export default class AlarmApp extends React.Component<any, State> {
   }
 
   render () {
-    const { alarms, currentTime, selectedAlarmIndex, editIsEnabled } = this.state
+    const { alarms, currentTime, selectedAlarmIndex, editIsEnabled, player } = this.state
     return (
       <div className="app-container">
         <div className="alarms-container">
@@ -484,6 +560,8 @@ export default class AlarmApp extends React.Component<any, State> {
             alarm={alarms[selectedAlarmIndex]}
             defaults={defaults}
             currentTime={currentTime}
+            player={player}
+
             updateAlarmKey={this.updateAlarmKey}
             updateAlarmInstance={this.updateAlarmInstance}
             addSecondsToNow={this.addSecondsToNow}

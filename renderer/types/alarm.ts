@@ -46,7 +46,7 @@ export interface DefaultFields {
   descStopwatch: string;
   alarmState: AlarmStateType;
 
-  defaultOffset: number;
+  timeToActivateOffset: number;
   floorSeconds: boolean;
   repeatType: RepeatType;
   repeatDaysOfWeek: Week;
@@ -62,8 +62,8 @@ export interface DefaultFields {
   stopwatchTotalTime: number;
 
   postponeOffset: number;
-  autoDisableAlarms: boolean;
-  autoDisableAfterMM: number;
+  autoStopAfterTimeIsActive: boolean;
+  autoStopAfterMM: number;
 
   listWidthPx: number;
   listHeightPx: number;

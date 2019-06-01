@@ -23,6 +23,8 @@ interface Props {
   alarm: Alarm,
   defaults: DefaultFields,
   currentTime: Date,
+  player: AudioBufferSourceNode | null,
+
   updateAlarmKey: (key: string, value: any, callback?: () => any) => void,
   updateAlarmInstance: (alarm: Alarm, alarmIndex?: number, callback?: () => any) => void,
   addSecondsToNow: (seconds: number) => Date,
@@ -261,7 +263,8 @@ export default class EditAlarm extends React.Component<Props, State> {
   }
 
   render () {
-    const { alarm, defaults, currentTime, addSecondsToNow } = this.props
+    const { alarm, defaults, currentTime, player } = this.props
+    const { addSecondsToNow } = this.props
     const { alarmType } = alarm
     return (
       <div className="edit-container">
@@ -288,7 +291,8 @@ export default class EditAlarm extends React.Component<Props, State> {
         <div className="edit__section padding">
           <div className="edit__block margin-bottom">Description</div>
 
-          <input type="text" autoComplete="off" className="margin-bottom" value={alarm.description}
+          <input type="text" autoComplete="off" className="margin-bottom"
+            value={alarm.description}
             onChange={e => this.props.updateAlarmKey('description', e.target.value)} />
         </div>
 
@@ -421,10 +425,12 @@ export default class EditAlarm extends React.Component<Props, State> {
         <div className="edit__section padding margin-bottom">
           <div className="edit__block">
             <input type="checkbox" id="play-sound" checked={alarm.playSound}
+              disabled={alarm.autoStopAlarm}
               onChange={() => this.props.updateAlarmKey('playSound', !alarm.playSound)} />
             <label htmlFor="play-sound">Play sound</label>
 
             <input type="checkbox" id="repeat-sound" checked={alarm.repeatSound}
+              disabled={alarm.autoStopAlarm}
               onChange={() => this.props.updateAlarmKey('repeatSound', !alarm.repeatSound)} />
             <label htmlFor="repeat-sound">Repeat sound</label>
           </div>
@@ -432,7 +438,13 @@ export default class EditAlarm extends React.Component<Props, State> {
           <div className="edit__block">
             <div className="sound-upload">
               <div className="sound-btn">Select sound to play</div>
-              <input type="file" name="sound-file" />
+              <input type="file" name="sound-file" accept="audio/mp3"
+                onChange={e => {
+                  e.preventDefault()
+                  const newSoundPath = e.target.files[0].path
+                  this.props.updateAlarmKey('soundPath', newSoundPath)
+                }} />
+
               <div className="sound-path">{
                 alarm.soundPath.split('/').pop() ||
                 defaults.soundPath.split('/').pop()}</div>
@@ -467,7 +479,10 @@ export default class EditAlarm extends React.Component<Props, State> {
           <div className="edit__block">
             <div className={"edit__btn margin-right "+
               this.props.getAlarmHandlerClass(alarm.alarmState)}
-              onClick={() => this.props.runAlarmHandler(alarmType, alarm.alarmState)}></div>
+              onClick={() => {
+                if (alarm.alarmState === 'active' && player) player.stop()
+                this.props.runAlarmHandler(alarmType, alarm.alarmState)
+              }}></div>
 
             {(alarm.alarmState === 'enabled' && alarmType === 'timer') &&
             <div className="edit__btn reset"

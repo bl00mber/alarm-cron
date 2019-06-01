@@ -31,14 +31,17 @@ app.on('ready', () => {
         mainWindow.openDevTools()
 
       }).catch(err => {
-        setTimeout(waitForWebpackDevServer(), 200)
+        setTimeout(waitForWebpackDevServer, 200)
       })
     }
     waitForWebpackDevServer()
 
-    globalShortcut.register('Ctrl+Shift+I', () => {
+    globalShortcut.register('Ctrl+Shift+I', function() {
       mainWindow.webContents.openDevTools()
     })
+    globalShortcut.register('f5', function() {
+      mainWindow.reload()
+  	})
   }
   else {
     mainWindow.loadURL('file://'+path.resolve(__dirname, '..', 'index.html'))

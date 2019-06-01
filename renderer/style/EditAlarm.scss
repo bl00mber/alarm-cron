@@ -128,4 +128,8 @@ input[type=text]:disabled {
 .sound-path {
   padding: 7px;
   width: 170px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  display: block;
 }
