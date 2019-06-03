@@ -1,12 +1,13 @@
 {
-  "name": "alarm",
+  "name": "alarm-cron",
   "version": "0.1.0",
   "description": "Create alerts, timers and stopwatches from the tray",
-  "main": "./main/main.js",
+  "main": "./dist/main.js",
   "scripts": {
-    "start": "npm-run-all --parallel renderer main",
-    "renderer": "TARGET=dev NODE_ENV=development webpack-dev-server --progress",
-    "main": "NODE_ENV=development electron .",
+    "start": "npm run dev:main && npm-run-all --parallel dev:renderer serve:main",
+    "dev:renderer": "TARGET=dev NODE_ENV=development webpack-dev-server --progress",
+    "dev:main": "rm -rf ./dist/* && TARGET=dev NODE_ENV=development webpack --env.main --mode development",
+    "serve:main": "NODE_ENV=development electron .",
     "test": "jest",
     "package-linux": "electron-packager . --overwrite --platform=linux --arch=x64 --icon=assets/icon/icon.png --prune=true --out=build",
     "package-win": "electron-packager . --overwrite --platform=win32 --asar=true --arch=ia32 --icon=assets/icon/icon.ico --prune=true --out=build --version-string.CompanyName='Nick Reiley' --version-string.FileDescription='Time management' --version-string.ProductName='Alarm'",
@@ -15,14 +16,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bl00mber/alarm.git"
+    "url": "git+https://github.com/bl00mber/alarm-cron.git"
   },
   "author": "Nick Reiley (https://github.com/bl00mber) <bloomber111@gmail.com>",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/bl00mber/alarm/issues"
+    "url": "https://github.com/bl00mber/alarm-cron/issues"
   },
-  "homepage": "https://github.com/bl00mber/alarm",
+  "homepage": "https://github.com/bl00mber/alarm-cron",
   "jest": {
     "moduleNameMapper": {
       "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/test/__mocks__/fileMock.js",

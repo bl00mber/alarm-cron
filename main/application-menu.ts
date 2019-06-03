@@ -1,13 +1,17 @@
-const { app, Menu } = require('electron')
-const _ = require('underscore-plus')
+import { app, Menu } from 'electron'
+// @ts-ignore
+import * as _ from 'underscore-plus'
+import { createNewWindow } from './window'
 
-module.exports =
-class ApplicationMenu {
-  constructor() {
+export default class ApplicationMenu {
+  activeTemplate: object[];
+  menu: Menu;
+
+  constructor () {
     this.setActiveTemplate(this.getMenuTemplate())
   }
 
-  setActiveTemplate (template) {
+  setActiveTemplate (template: object[]) {
     if (!_.isEqual(template, this.activeTemplate)) {
       this.activeTemplate = template
       this.menu = Menu.buildFromTemplate(_.deepClone(template))
@@ -18,15 +22,17 @@ class ApplicationMenu {
     Menu.setApplicationMenu(this.menu)
   }
 
-  getMenuTemplate() {
+  getMenuTemplate () {
     return [{
       label: app.getName(),
       submenu: [
         {
           label: 'Settings',
+          click: () => createNewWindow({width: 800, height: 600})
         },
         {
-          label: 'About'
+          label: 'About',
+          click: () => createNewWindow({width: 800, height: 600})
         },
         { type: 'separator' },
         {

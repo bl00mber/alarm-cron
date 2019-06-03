@@ -6,9 +6,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
-import { remote } from 'electron'
-const fs = require('fs')
-const exec = require('child_process').exec
+import * as fs  from 'fs'
+import { exec } from 'child_process'
+
+import { remote, shell } from 'electron'
 
 import * as React from 'react'
 // @ts-ignore
@@ -50,7 +51,6 @@ const defaults: DefaultFields = { // needs to be placed into app/settings
   listHeightPx: 552,
   editWidthPx: 380,
   editHeightPx: 622,
-  fullscreenIsEnabled: false,
 }
 
 interface State {
@@ -572,12 +572,12 @@ export default class AlarmApp extends React.Component<any, State> {
           />
           <div className="settings-footer padding">
             <a className="copyright" target="_blank"
-              href="https://github.com/bl00mber/alarm"
+              href="https://github.com/bl00mber/alarm-cron"
               onClick={e => {
                 event.preventDefault()
                 // @ts-ignore
                 let url = e.target.href
-                require('electron').shell.openExternal(url)
+                shell.openExternal(url)
               }}>Nick Reiley (c) 2019</a>
           </div>
         </div>}

@@ -69,5 +69,4 @@ export interface DefaultFields {
   listHeightPx: number;
   editWidthPx: number;
   editHeightPx: number;
-  fullscreenIsEnabled: boolean;
 }

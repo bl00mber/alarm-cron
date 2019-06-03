@@ -1,35 +1,33 @@
-const path = require('path')
-const { app, BrowserWindow, globalShortcut } = require('electron')
-const ApplicationMenu = require('./application-menu')
+import { app, BrowserWindow, globalShortcut } from 'electron'
+import ApplicationMenu from './application-menu'
+import { createNewWindow } from './window'
+import * as path from 'path'
 
 app.setName('Alarm')
-
-let mainWindow
 
 const applicationMenu = new ApplicationMenu()
 applicationMenu.setApplicationMenu()
 
 app.on('ready', () => {
-  const { screen } = require('electron')
+  let mainWindow: null | BrowserWindow = null
 
-  let devOptions = {}
-  if (process.env.npm_package_scripts_main.slice(9,20) === "development") {
-    devOptions = { devTools: true, resizable: true }
+  if (process.env.NODE_ENV === "development") {
+    mainWindow = createNewWindow({devTools: true, resizable: true})
+  } else {
+    mainWindow = createNewWindow()
   }
-  mainWindow = new BrowserWindow({
-    resizable: false,
-    webPreferences: {nodeIntegration: true},
-    ...devOptions })
 
-  if (process.env.npm_package_scripts_main.slice(9,20) === "development") {
+  if (process.env.NODE_ENV === "development") {
     function waitForWebpackDevServer() {
       const axios = require('axios')
+      // @ts-ignore
       axios.get('http://localhost:8080/index.html').then(res => {
-
+        // @ts-ignore
         process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = true
         mainWindow.loadURL('http://localhost:8080/index.html')
+        // @ts-ignore
         mainWindow.openDevTools()
-
+      // @ts-ignore
       }).catch(err => {
         setTimeout(waitForWebpackDevServer, 200)
       })
@@ -46,16 +44,6 @@ app.on('ready', () => {
   else {
     mainWindow.loadURL('file://'+path.resolve(__dirname, '..', 'index.html'))
   }
-
-  mainWindow.on('closed', function() {
-    // Dereference the window object, usually you would store windows
-    // in an array if your app supports multi windows, this is the time
-    // when you should delete the corresponding element.
-    mainWindow = null
-  })
-
-  const { width: monitorWidth, height: monitorHeight } = screen.getPrimaryDisplay().workAreaSize
-  mainWindow.setMaximumSize(monitorWidth, monitorHeight)
 })
 
 app.on('window-all-closed', function() {

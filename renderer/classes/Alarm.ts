@@ -11,8 +11,8 @@ import { AlarmFields, AlarmType, AlarmStateType,
 
 export default class Alarm implements AlarmFields {
   /**
-   * timerTimeToWait - used to restore timer value that has been set by user in particular alarm
-   * timerTimeToWaitCountdown - used to countdown active timer
+   * @prop timerTimeToWait used to restore timer value that has been set by user in particular alarm
+   * @prop timerTimeToWaitCountdown used to countdown active timer
   */
   [key: string]: any;
 
@@ -41,7 +41,7 @@ export default class Alarm implements AlarmFields {
   stopwatchTotalTime: number | undefined;  // Stopwatch
 
   /**
-   * By default class instances implements enabled Alarm.
+   * By default class instances implements enabled Alarm
   */
   constructor ({
     alarmType, description, alarmState, timeToActivate,

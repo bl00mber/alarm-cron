@@ -1,23 +1,27 @@
 const path = require('path')
 const webpack = require('webpack')
-const merge = require('webpack-merge')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const TerserPlugin = require('terser-webpack-plugin')
 
-const TARGET = process.env.TARGET
+const DEV = process.env.TARGET === 'dev'
 const ROOT_PATH = path.resolve(__dirname)
 
-const common = {
-  entry: path.resolve(ROOT_PATH, 'renderer', 'renderer.tsx'),
-  target: 'electron-renderer',
+module.exports = env => {
+const MAIN = !!(env && env.main)
+return {
+  entry: MAIN ? path.resolve(ROOT_PATH, 'main', 'main.ts') :
+                path.resolve(ROOT_PATH, 'renderer', 'renderer.tsx'),
+  target: MAIN ? 'electron-main' : 'electron-renderer',
+  output: {
+    path: path.resolve(ROOT_PATH, 'dist'),
+    filename: MAIN ? 'main.js' : 'renderer.js'
+  },
   resolve: {
     extensions: ['.js', '.jsx', '.ts', '.tsx'],
     modules: ['node_modules']
   },
-  output: {
-    path: path.resolve(ROOT_PATH, 'dist'),
-    filename: 'bundle.js'
-  },
+  devtool: (DEV && !MAIN) ? 'inline-source-map' : '',
+  mode: (DEV && !MAIN) ? 'development' : 'production',
   module: {
     rules: [
       {
@@ -54,53 +58,32 @@ const common = {
       }
     ]
   },
+  devServer: (DEV && !MAIN) ? {
+    publicPath: 'http://localhost:8080/dist/',
+    port: '8080',
+    host: '0.0.0.0',
+    historyApiFallback: true,
+    hot: true,
+    inline: true,
+    progress: true,
+    index: 'src/assets/index.html'
+  } : {},
+  optimization: DEV ? {} : {minimizer: [new TerserPlugin()]},
   plugins: [
-    new MiniCssExtractPlugin({
-      filename: "style.css",
-      chunkFilename: "[id].css"
-    })
+    new MiniCssExtractPlugin({ filename: "style.css", chunkFilename: "[id].css" }),
+    ...(!MAIN ? [
+      new webpack.HotModuleReplacementPlugin()
+    ] : []),
+    ...(DEV ? [
+      new webpack.DefinePlugin({
+        'process.env': {NODE_ENV: JSON.stringify('development')},
+        __DEV__: true
+      })
+    ] : [
+      new webpack.DefinePlugin({
+        'process.env': {NODE_ENV: JSON.stringify('production')},
+        __DEV__: false
+      })
+    ])
   ]
-}
-
-if (TARGET === 'dev') {
-  module.exports = merge(common, {
-    mode: 'development',
-    devtool: 'inline-source-map',
-    devServer: {
-      publicPath: 'http://localhost:8080/dist/',
-      port: '8080',
-      host: '0.0.0.0',
-      historyApiFallback: true,
-      hot: true,
-      inline: true,
-      progress: true,
-      index: 'index.html'
-    },
-    plugins: [
-      new webpack.HotModuleReplacementPlugin(),
-      new webpack.DefinePlugin({
-        'process.env': {
-          NODE_ENV: JSON.stringify('development')
-        },
-        __DEV__: true
-      })
-    ]
-  })
-}
-
-if (TARGET === 'build') {
-  module.exports = merge(common, {
-    mode: 'production',
-    optimization: {
-      minimizer: [new TerserPlugin()],
-    },
-    plugins: [
-      new webpack.DefinePlugin({
-        'process.env': {
-          NODE_ENV: JSON.stringify('production')
-        },
-        __DEV__: true
-      })
-    ]
-  })
-}
+}}
