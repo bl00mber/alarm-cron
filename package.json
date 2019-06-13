@@ -9,9 +9,9 @@
     "dev:main": "rm -rf ./dist/* && TARGET=dev NODE_ENV=development webpack --env.main --mode development",
     "serve:main": "NODE_ENV=development electron .",
     "test": "jest",
-    "package-linux": "electron-packager . --overwrite --platform=linux --arch=x64 --icon=assets/icon/icon.png --prune=true --out=build",
-    "package-win": "electron-packager . --overwrite --platform=win32 --asar=true --arch=ia32 --icon=assets/icon/icon.ico --prune=true --out=build --version-string.CompanyName='Nick Reiley' --version-string.FileDescription='Time management' --version-string.ProductName='Alarm'",
-    "package-mac": "electron-packager . --overwrite --platform=darwin --arch=x64 --icon=assets/icon/icon.icns --prune=true --out",
+    "package-linux": "electron-packager . --overwrite --extra-resource='assets/sounds/default.mp3' --extra-resource='assets/sounds/Evacuation-Test-By-The-River-Japan.mp3' --extra-resource='assets/sounds/Ringing-Train-Station-Da-Nang-Vietnam.mp3' --extra-resource='assets/sounds/Ringing-Train-Station-Street-Da-Nang-Vietnam.mp3' --extra-resource='assets/sounds/Telemetry-Tech-Data-23.mp3' --platform=linux --arch=x64 --icon='assets/icon/icon.png' --prune=true --out=build",
+    "package-win": "electron-packager . --overwrite --extra-resource='assets/sounds/default.mp3' --extra-resource='assets/sounds/Evacuation-Test-By-The-River-Japan.mp3' --extra-resource='assets/sounds/Ringing-Train-Station-Da-Nang-Vietnam.mp3' --extra-resource='assets/sounds/Ringing-Train-Station-Street-Da-Nang-Vietnam.mp3' --extra-resource='assets/sounds/Telemetry-Tech-Data-23.mp3' --platform=win32 --asar=true --arch=ia32 --icon='assets/icon/icon.ico' --prune=true --out=build --version-string.CompanyName='Nick Reiley' --version-string.FileDescription='Time management' --version-string.ProductName='Alarm'",
+    "package-mac": "electron-packager . --overwrite --extra-resource='assets/sounds/default.mp3' --extra-resource='assets/sounds/Evacuation-Test-By-The-River-Japan.mp3' --extra-resource='assets/sounds/Ringing-Train-Station-Da-Nang-Vietnam.mp3' --extra-resource='assets/sounds/Ringing-Train-Station-Street-Da-Nang-Vietnam.mp3' --extra-resource='assets/sounds/Telemetry-Tech-Data-23.mp3' --platform=darwin --arch=x64 --icon='assets/icon/icon.icns' --prune=true --out",
     "build": "package-linux && package-win && package-mac"
   },
   "repository": {
@@ -24,6 +24,9 @@
     "url": "https://github.com/bl00mber/alarm-cron/issues"
   },
   "homepage": "https://github.com/bl00mber/alarm-cron",
+  "engines": {
+    "node": ">=11.7.0"
+  },
   "jest": {
     "moduleNameMapper": {
       "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/test/__mocks__/fileMock.js",
@@ -35,8 +38,10 @@
   },
   "devDependencies": {
     "@babel/core": "^7.4.4",
+    "@types/lodash": "^4.14.134",
     "@types/react": "^16.8.16",
     "@types/react-dom": "^16.8.4",
+    "@types/react-router-dom": "^4.3.3",
     "axios": "^0.18.0",
     "babel-loader": "^8.0.5",
     "babel-preset-react-app": "^8.0.0",
@@ -61,12 +66,12 @@
   },
   "dependencies": {
     "electron-store": "^3.2.0",
-    "lodash.clonedeep": "^4.5.0",
+    "lodash": "^4.17.11",
     "react": "^16.8.6",
     "react-bootstrap": "^0.32.4",
     "react-bootstrap-date-picker": "git+https://github.com/mixxt/react-bootstrap-date-picker.git#e535f478106c74bc03369d7a0cdfa943a97976ef",
     "react-dom": "^16.8.6",
-    "react-simple-timefield": "^2.0.3",
-    "underscore-plus": "^1.7.0"
+    "react-router-dom": "^5.0.0",
+    "react-simple-timefield": "^2.0.3"
   }
 }

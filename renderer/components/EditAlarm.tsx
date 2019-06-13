@@ -1,33 +1,32 @@
 /*
- * Copyright Nick Reiley (https://github.com/bl00mber) <bloomber111@gmail.com>
+Copyright (c) Nick Reiley (https://github.com/bl00mber) <bloomber111@gmail.com>
 
- * Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
+Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
 
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
 import * as React from 'react'
-// @ts-ignore
-import cloneDeep from 'lodash.clonedeep'
+import { cloneDeep, capitalize } from 'lodash'
 // @ts-ignore
 import DatePicker from 'react-bootstrap-date-picker'
 // @ts-ignore
 import TimeField from 'react-simple-timefield'
-import Alarm from '../classes/Alarm'
-import { AlarmType, AlarmStateType, RepeatType, Week, DefaultFields } from '../types/alarm'
+import Alarm from '../../classes/Alarm'
+import { AlarmType, AlarmStateType, RepeatType, Week, SettingsFields } from '../../types/alarm'
 
-import '../style/EditAlarm.scss'
-import '../style/react-bootstrap-date-picker.css'
+import '../styles/EditAlarm.scss'
+import '../styles/react-bootstrap-date-picker.css'
 
 interface Props {
   alarm: Alarm,
-  defaults: DefaultFields,
+  settings: SettingsFields,
   currentTime: Date,
-  player: AudioBufferSourceNode | null,
 
+  stopPlayerAndCheckForActive: () => void,
   updateAlarmKey: (key: string, value: any, callback?: () => any) => void,
   updateAlarmInstance: (alarm: Alarm, alarmIndex?: number, callback?: () => any) => void,
-  addSecondsToNow: (seconds: number) => Date,
+  addSecondsToNow: (seconds: number, floorSeconds: boolean) => Date,
   toDDHHmmss: (seconds: number, alarmType: AlarmType) => string,
   runAlarmHandler: (alarmType: AlarmType, alarmState: AlarmStateType, alarmIndex?: number) => void,
   runCustomAlarmHandler: (handlerKey: string, args?: any[], alarmIndex?: number) => void,
@@ -59,10 +58,10 @@ export default class EditAlarm extends React.Component<Props, State> {
 
   // Alarm
   setAlarm = () => {
-    const { defaults } = this.props
+    const { settings } = this.props
     const alarm = cloneDeep(this.props.alarm)
     alarm.setAlarm({
-      alarmType: 'alarm', description: defaults.descAlarm, alarmState: 'disabled',
+      description: settings.descAlarm, alarmState: 'disabled',
     })
     this.props.updateAlarmInstance(alarm)
   }
@@ -72,7 +71,7 @@ export default class EditAlarm extends React.Component<Props, State> {
    * oldValue: globalISOString
    * value: localISOString -> globalISOString
    * newValue: value, oldValue
-  */
+  **/
   updateDate = (alarmKey: string, oldDate: Date, newDateISOLocal: string) => {
     const newDateISO = this.localToGlobalISOString(newDateISOLocal)
     const newDate = new Date(newDateISO)
@@ -125,8 +124,8 @@ export default class EditAlarm extends React.Component<Props, State> {
         let weekStr = ''
         for (let key in alarm.repeatDaysOfWeek) {
           if (alarm.repeatDaysOfWeek[key]) {
-            if (weekStr.length > 0) { weekStr = weekStr+', '+key.capitalize() }
-            else { weekStr += key.capitalize() }
+            if (weekStr.length > 0) { weekStr = weekStr+', '+capitalize(key) }
+            else { weekStr += capitalize(key) }
           }
         }
         return weekStr
@@ -173,7 +172,7 @@ export default class EditAlarm extends React.Component<Props, State> {
             week[key] = !week[key]
             this.props.updateAlarmKey('repeatDaysOfWeek', week, this.updateRepeatType)
           }} />
-        <label htmlFor={"alarm_"+key}>{key.capitalize()}</label>
+        <label htmlFor={"alarm_"+key}>{capitalize(key)}</label>
       </div>)
     }
     return weekJSX
@@ -182,11 +181,11 @@ export default class EditAlarm extends React.Component<Props, State> {
   // Timer
   // Remainder is a seconds remainder from overall time divided by days
   setTimer = () => {
-    const { defaults } = this.props
+    const { settings } = this.props
     const alarm = cloneDeep(this.props.alarm)
     alarm.setTimer({
-      alarmType: 'timer', description: defaults.descTimer, alarmState: 'disabled',
-      timerTimeToWait: alarm.timerTimeToWait || defaults.timerTimeToWait,
+      description: settings.descTimer, alarmState: 'disabled',
+      timerTimeToWait: alarm.timerTimeToWait || settings.timerTimeToWait,
     })
     this.props.updateAlarmInstance(alarm)
   }
@@ -253,18 +252,18 @@ export default class EditAlarm extends React.Component<Props, State> {
 
   // Stopwatch
   setStopwatch = () => {
-    const { defaults } = this.props
+    const { settings } = this.props
     const alarm = cloneDeep(this.props.alarm)
     alarm.setStopwatch({
-      alarmType: 'stopwatch', description: defaults.descStopwatch, alarmState: 'disabled',
+      description: settings.descStopwatch, alarmState: 'disabled',
       stopwatchTotalTime: 0,
     })
     this.props.updateAlarmInstance(alarm)
   }
 
   render () {
-    const { alarm, defaults, currentTime, player } = this.props
-    const { addSecondsToNow } = this.props
+    const { alarm, settings, currentTime } = this.props
+    const { stopPlayerAndCheckForActive, addSecondsToNow } = this.props
     const { alarmType } = alarm
     return (
       <div className="edit-container">
@@ -318,7 +317,7 @@ export default class EditAlarm extends React.Component<Props, State> {
               className="timepicker"
               onChange={(value: string) =>
                 this.updateTime('timeToActivate', alarm.timeToActivate, value)}
-              input={<input className='edit__time-input' autoComplete="off" />}
+              input={<input className="edit__time-input" autoComplete="off" />}
             />
           </div>
 
@@ -384,12 +383,13 @@ export default class EditAlarm extends React.Component<Props, State> {
               onChange={(value: string) => {
                 this.updateTimeTimerTimeToWait(alarm.timerTimeToWait, value)
               }}
-              input={<input className='edit__time-input' autoComplete="off" />}
+              input={<input className="edit__time-input" autoComplete="off" />}
             />
           </div>
 
           <div className="edit__block">Timer will activate: {
-            this.getDateStringFromDate(addSecondsToNow(alarm.timerTimeToWaitCountdown))}</div>
+            this.getDateStringFromDate(addSecondsToNow(alarm.timerTimeToWaitCountdown,
+              settings.floorSeconds))}</div>
 
           <div className="edit__block">
             <input type="checkbox" id="repeat-timer"
@@ -447,7 +447,7 @@ export default class EditAlarm extends React.Component<Props, State> {
 
               <div className="sound-path">{
                 alarm.soundPath.split('/').pop() ||
-                defaults.soundPath.split('/').pop()}</div>
+                settings.soundPath.split('/').pop()}</div>
             </div>
           </div>
         </div>}
@@ -480,7 +480,7 @@ export default class EditAlarm extends React.Component<Props, State> {
             <div className={"edit__btn margin-right "+
               this.props.getAlarmHandlerClass(alarm.alarmState)}
               onClick={() => {
-                if (alarm.alarmState === 'active' && player) player.stop()
+                if (alarm.alarmState === 'active') stopPlayerAndCheckForActive()
                 this.props.runAlarmHandler(alarmType, alarm.alarmState)
               }}></div>
 

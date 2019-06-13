@@ -1,29 +1,56 @@
+import * as path from 'path'
 import { app, BrowserWindow, globalShortcut } from 'electron'
+import { ipcMain } from 'electron'
+import * as Store from 'electron-store'
+
 import ApplicationMenu from './application-menu'
 import { createNewWindow } from './window'
-import * as path from 'path'
+import { defaultSettings } from './default-settings'
+import Alarm from '../classes/Alarm'
+import { SettingsFields } from '../types/alarm'
+
 
 app.setName('Alarm')
 
 const applicationMenu = new ApplicationMenu()
 applicationMenu.setApplicationMenu()
 
-app.on('ready', () => {
-  let mainWindow: null | BrowserWindow = null
 
-  if (process.env.NODE_ENV === "development") {
-    mainWindow = createNewWindow({devTools: true, resizable: true})
+const store = new Store()
+
+function initSettings() {
+  const settings = store.get('settings')
+  if (!settings) store.set('settings', defaultSettings)
+}
+initSettings()
+
+ipcMain.on('sync-settings', (event: any, settings: SettingsFields) => {
+  store.set('settings', settings)
+  event.sender.send('res-settings', settings)
+})
+
+ipcMain.on('restore-default-settings', (event: any, settings: SettingsFields) => {
+  store.set('settings', defaultSettings)
+  event.sender.send('res-settings', defaultSettings)
+})
+
+
+app.on('ready', () => {
+  let mainWindow: BrowserWindow | null = null
+
+  if (process.env.NODE_ENV === 'production') {
+    mainWindow = createNewWindow('main')
   } else {
-    mainWindow = createNewWindow()
+    mainWindow = createNewWindow('main', {devTools: true, resizable: true})
   }
 
-  if (process.env.NODE_ENV === "development") {
+  if (process.env.NODE_ENV === 'production') {
+    mainWindow.loadURL('file://'+path.resolve(__dirname, '..', 'index.html'))
+  } else {
     function waitForWebpackDevServer() {
       const axios = require('axios')
       // @ts-ignore
       axios.get('http://localhost:8080/index.html').then(res => {
-        // @ts-ignore
-        process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = true
         mainWindow.loadURL('http://localhost:8080/index.html')
         // @ts-ignore
         mainWindow.openDevTools()
@@ -35,21 +62,18 @@ app.on('ready', () => {
     waitForWebpackDevServer()
 
     globalShortcut.register('Ctrl+Shift+I', function() {
-      mainWindow.webContents.openDevTools()
+      const focusedWindow = BrowserWindow.getFocusedWindow()
+      if (focusedWindow) focusedWindow.webContents.openDevTools()
     })
     globalShortcut.register('f5', function() {
-      mainWindow.reload()
+      const focusedWindow = BrowserWindow.getFocusedWindow()
+      if (focusedWindow) focusedWindow.reload()
   	})
   }
-  else {
-    mainWindow.loadURL('file://'+path.resolve(__dirname, '..', 'index.html'))
-  }
-})
 
-app.on('window-all-closed', function() {
-  // On OS X it is common for applications and their menu bar
-  // to stay active until the user quits explicitly with Cmd + Q
-  if (process.platform != 'darwin') {
+  // App quits when user presses Cmd+Q or selects quit from app menu, but not
+  // when all windows are closed
+  globalShortcut.register('Cmd+Q', function() {
     app.quit()
-  }
+  })
 })

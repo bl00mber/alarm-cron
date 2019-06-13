@@ -1,0 +1,10 @@
+.about-container {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  background: #f9f9fd;
+  & div {
+    margin-bottom: 5px;
+  }
+}

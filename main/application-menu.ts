@@ -1,6 +1,5 @@
 import { app, Menu } from 'electron'
-// @ts-ignore
-import * as _ from 'underscore-plus'
+import { isEqual, cloneDeep } from 'lodash'
 import { createNewWindow } from './window'
 
 export default class ApplicationMenu {
@@ -12,9 +11,9 @@ export default class ApplicationMenu {
   }
 
   setActiveTemplate (template: object[]) {
-    if (!_.isEqual(template, this.activeTemplate)) {
+    if (!isEqual(template, this.activeTemplate)) {
       this.activeTemplate = template
-      this.menu = Menu.buildFromTemplate(_.deepClone(template))
+      this.menu = Menu.buildFromTemplate(cloneDeep(template))
     }
   }
 
@@ -28,11 +27,11 @@ export default class ApplicationMenu {
       submenu: [
         {
           label: 'Settings',
-          click: () => createNewWindow({width: 800, height: 600})
+          click: () => createNewWindow('settings', {width: 800, height: 600})
         },
         {
           label: 'About',
-          click: () => createNewWindow({width: 800, height: 600})
+          click: () => createNewWindow('about', {width: 300, height: 200})
         },
         { type: 'separator' },
         {

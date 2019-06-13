@@ -1,12 +1,13 @@
-const { remote } = require('electron')
+import { remote } from 'electron'
 const { Menu, MenuItem } = remote
 
-let rightClickPosition = null
+let rightClickPosition: object | null = null
 
 const menu = new Menu()
 menu.append(new MenuItem({ label: 'Inspect element', click() {
-  remote.getCurrentWindow().inspectElement(rightClickPosition.x, rightClickPosition.y) }
-}))
+  // @ts-ignore
+  remote.getCurrentWindow().inspectElement(rightClickPosition.x, rightClickPosition.y)
+}}))
 
 window.addEventListener('contextmenu', (e) => {
   e.preventDefault()

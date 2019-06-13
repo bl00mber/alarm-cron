@@ -1,9 +1,6 @@
 interface Date {
   toLocalISOString(): string;
 }
-interface String {
-  capitalize(): string;
-}
 
 Date.prototype.toLocalISOString = function() {
   let tzo = -this.getTimezoneOffset(),
@@ -20,8 +17,4 @@ Date.prototype.toLocalISOString = function() {
     ':' + pad(this.getSeconds()) +
     dif + pad(tzo / 60) +
     ':' + pad(tzo % 60);
-}
-
-String.prototype.capitalize = function() {
-  return this.charAt(0).toUpperCase() + this.slice(1)
 }

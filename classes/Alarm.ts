@@ -1,9 +1,9 @@
 /*
- * Copyright Nick Reiley (https://github.com/bl00mber) <bloomber111@gmail.com>
+Copyright (c) Nick Reiley (https://github.com/bl00mber) <bloomber111@gmail.com>
 
- * Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
+Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
 
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
 import { AlarmFields, AlarmType, AlarmStateType,
@@ -13,7 +13,7 @@ export default class Alarm implements AlarmFields {
   /**
    * @prop timerTimeToWait used to restore timer value that has been set by user in particular alarm
    * @prop timerTimeToWaitCountdown used to countdown active timer
-  */
+  **/
   [key: string]: any;
 
   alarmType: AlarmType | undefined;
@@ -41,22 +41,22 @@ export default class Alarm implements AlarmFields {
   stopwatchTotalTime: number | undefined;  // Stopwatch
 
   /**
-   * By default class instances implements enabled Alarm
-  */
+   * Initially class instances implements enabled Alarm
+  **/
   constructor ({
-    alarmType, description, alarmState, timeToActivate,
+    description, alarmState, timeToActivate,
     repeatType, repeatDaysOfWeek,
     repeatCountdown, repeatFrom,
     playSound, soundPath, repeatSound,
     startApplication, autoStopAlarm, applicationCommand
   }: {
-    alarmType: AlarmType, description: string,
-    alarmState: AlarmStateType, timeToActivate: Date,
+    description: string, alarmState: AlarmStateType, timeToActivate: Date,
     repeatType: RepeatType, repeatDaysOfWeek: Week,
     repeatCountdown: number, repeatFrom: Date,
     playSound: boolean, soundPath: string, repeatSound: boolean,
     startApplication: boolean, autoStopAlarm: boolean, applicationCommand: string
   }) {
+    this.alarmType = 'alarm'
     Object.assign(
       this, arguments[0]
     )
@@ -80,10 +80,11 @@ export default class Alarm implements AlarmFields {
 
   // Set
   setAlarm ({
-    alarmType, description, alarmState
+    description, alarmState
   }: {
-    alarmType: AlarmType, description: string, alarmState: AlarmStateType
+    description: string, alarmState: AlarmStateType
   }) {
+    this.alarmType = 'alarm'
     this.repeatType ='once'
     this.repeatDaysOfWeek = {
       mon: false, tue: false, wed: false, thu: false, fri: false, sat: false, sun: false
@@ -94,12 +95,11 @@ export default class Alarm implements AlarmFields {
   }
 
   setTimer ({
-    alarmType, description, alarmState,
-    timerTimeToWait
+    description, alarmState, timerTimeToWait
   }: {
-    alarmType: AlarmType, description: string, alarmState: AlarmStateType,
-    timerTimeToWait: number
+    description: string, alarmState: AlarmStateType, timerTimeToWait: number
   }) {
+    this.alarmType = 'timer'
     this.timerTimeToWaitCountdown = timerTimeToWait
     Object.assign(
       this, arguments[0]
@@ -107,12 +107,11 @@ export default class Alarm implements AlarmFields {
   }
 
   setStopwatch ({
-    alarmType, description, alarmState,
-    stopwatchTotalTime
+    description, alarmState, stopwatchTotalTime
   }: {
-    alarmType: AlarmType, description: string, alarmState: AlarmStateType,
-    stopwatchTotalTime: number
+    description: string, alarmState: AlarmStateType, stopwatchTotalTime: number
   }) {
+    this.alarmType = 'stopwatch'
     this.stopwatchTimeFrom = undefined
     Object.assign(
       this, arguments[0]
@@ -123,7 +122,7 @@ export default class Alarm implements AlarmFields {
   /**
    * Enable
    * Expired alarms/timers cannot be enabled
-  */
+  **/
   enableAlarm () {
     if (this.alarmState !== 'disabled') return;
     if (new Date().getTime() > this.timeToActivate.getTime()) return; // Expired
@@ -148,7 +147,7 @@ export default class Alarm implements AlarmFields {
 
   /**
    * Pause
-  */
+  **/
   pauseAlarm () {
     if (this.alarmState !== 'enabled') return;
     this.alarmState = 'disabled'
@@ -170,7 +169,7 @@ export default class Alarm implements AlarmFields {
    * Calculate next countdown point
    *   if returns date set new alarm
    *   if returns null set alarmState = 'disabled'
-  */
+  **/
   resetAlarm () {
     if (this.alarmState !== 'active') return;
     if (this.repeatType !== 'once') {
@@ -211,7 +210,7 @@ export default class Alarm implements AlarmFields {
   /**
    * The logic is written for the case when
    * application platform is turned off for the long time
-  */
+  **/
   setNextCountdownDate () {
     if (this.repeatType === 'weekly') {
       const currentDateIndex = new Date().getDay()
@@ -274,6 +273,22 @@ export default class Alarm implements AlarmFields {
       }
       addIncrement()
       this.timeToActivate.setDate(increment)
+    }
+  }
+
+
+  restoreFrom (alarmJSON: object) {
+    for (let key in alarmJSON) {
+      const dateKeys = [
+        'timeToActivate', 'repeatFrom', 'timerTimeFrom', 'stopwatchTimeFrom'
+      ]
+      if (dateKeys.includes(key)) {
+        // @ts-ignore
+        this[key] = new Date(alarmJSON[key])
+      } else {
+        // @ts-ignore
+        this[key] = alarmJSON[key]
+      }
     }
   }
 }
