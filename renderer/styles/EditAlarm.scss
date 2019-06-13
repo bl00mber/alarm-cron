@@ -2,11 +2,15 @@
   margin-right: 10px;
 }
 
+.margin-bottom {
+  margin-bottom: 5px;
+}
+
 .align-center {
   align-items: center;
 }
 
-.edit-container, .edit__section {
+.edit-controls-container, .edit__section {
   flex-direction: column;
 }
 
@@ -18,11 +22,7 @@
   flex-wrap: wrap;
 }
 
-.margin-bottom {
-  margin-bottom: 5px;
-}
-
-.edit-container {
+.edit-controls-container {
   flex-grow: 1;
   width: 380px;
 }

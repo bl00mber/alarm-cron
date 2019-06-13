@@ -82,7 +82,7 @@ div {
   margin-right: 0;
 }
 
-.alarms-container, .settings-container, .alarms-list, .alarm-countdown {
+.alarms-container, .edit-container, .alarms-list, .alarm-countdown {
   flex-direction: column;
 }
 
@@ -90,7 +90,7 @@ div {
   flex-grow: 1;
 }
 
-.settings-container {
+.edit-container {
   background: linear-gradient(#f9f9fd, #f5f6ff);
 }
 

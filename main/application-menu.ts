@@ -27,7 +27,7 @@ export default class ApplicationMenu {
       submenu: [
         {
           label: 'Settings',
-          click: () => createNewWindow('settings', {width: 800, height: 600})
+          click: () => createNewWindow('settings', {width: 500, height: 600})
         },
         {
           label: 'About',

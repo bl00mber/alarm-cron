@@ -33,3 +33,8 @@ export const createNewWindow = (windowId: string, options: object = {}): Browser
   currentWindows.set(windowId, newWindow)
   return newWindow
 }
+
+export const getWindow = (windowId: string): BrowserWindow | null => {
+  if (!currentWindows.has(windowId)) { return null }
+  else { return currentWindows.get(windowId) }
+}

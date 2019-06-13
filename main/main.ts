@@ -4,7 +4,7 @@ import { ipcMain } from 'electron'
 import * as Store from 'electron-store'
 
 import ApplicationMenu from './application-menu'
-import { createNewWindow } from './window'
+import { createNewWindow, getWindow } from './window'
 import { defaultSettings } from './default-settings'
 import Alarm from '../classes/Alarm'
 import { SettingsFields } from '../types/alarm'
@@ -24,14 +24,18 @@ function initSettings() {
 }
 initSettings()
 
-ipcMain.on('sync-settings', (event: any, settings: SettingsFields) => {
+ipcMain.on('save-settings', (event: any, settings: SettingsFields) => {
   store.set('settings', settings)
-  event.sender.send('res-settings', settings)
+  const mainWindow = getWindow('main')
+  if (mainWindow) mainWindow.webContents.send('res-settings', settings)
 })
 
-ipcMain.on('restore-default-settings', (event: any, settings: SettingsFields) => {
+ipcMain.on('restore-default-settings', (event: any) => {
   store.set('settings', defaultSettings)
-  event.sender.send('res-settings', defaultSettings)
+  const mainWindow = getWindow('main')
+  if (mainWindow) mainWindow.webContents.send('res-settings', defaultSettings)
+  const settings = getWindow('settings')
+  if (settings) settings.webContents.send('res-settings', defaultSettings)
 })
 
 

@@ -94,7 +94,6 @@ export default class EditAlarm extends React.Component<Props, State> {
     updatedDate.setHours(hours, minutes, 0)
     this.props.updateAlarmKey(alarmKey, updatedDate)
   }
-  // -----------------------------------------
 
   getTimeFromDate (date: Date): string { // hh:mm
     return date.toLocalISOString().slice(11, 16)
@@ -266,7 +265,7 @@ export default class EditAlarm extends React.Component<Props, State> {
     const { stopPlayerAndCheckForActive, addSecondsToNow } = this.props
     const { alarmType } = alarm
     return (
-      <div className="edit-container">
+      <div className="edit-controls-container">
         <div className="alarm-type padding-controls">
           <div className={"alarm-type-alarm btn-padding"
             +(alarmType==='alarm'?' active':'')}

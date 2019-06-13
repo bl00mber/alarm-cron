@@ -71,6 +71,7 @@
     "react-bootstrap": "^0.32.4",
     "react-bootstrap-date-picker": "git+https://github.com/mixxt/react-bootstrap-date-picker.git#e535f478106c74bc03369d7a0cdfa943a97976ef",
     "react-dom": "^16.8.6",
+    "react-dropdown": "^1.6.4",
     "react-router-dom": "^5.0.0",
     "react-simple-timefield": "^2.0.3"
   }

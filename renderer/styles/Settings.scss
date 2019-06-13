@@ -1,0 +1,49 @@
+.margin-left {
+  margin-left: 10px;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+.settings-container::-webkit-scrollbar {
+  width: 12px;
+}
+.settings-container::-webkit-scrollbar-thumb {
+  background-color: #d5d6ff;
+  border-radius: 8px;
+}
+
+.settings-container {
+  width: 100%;
+  padding: 10px 25px;
+  overflow: auto;
+}
+
+.Dropdown-menu, .settings-section {
+  flex-direction: column;
+}
+
+.settings-header {
+  font-size: 16px;
+  margin: 15px 0;
+}
+
+.settings__block {
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.settings__btn {
+  cursor: pointer;
+  padding: 10px 30px;
+  margin: 10px 15px 20px 0;
+  border-radius: 5px;
+  background: #8384f5;
+  color: #fff;
+  font-weight: 500;
+
+  &:active {
+    background: #3f40ab;
+  }
+}

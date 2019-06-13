@@ -208,8 +208,7 @@ export default class AlarmApp extends React.Component<any, State> {
       player.start(0, 0)
       if (repeatSound) player.loop = true
 
-      this.setState({ player, cachedSoundBuffer: _arrayBuffer,
-        cachedSoundPath: soundPath })
+      this.setState({ player, cachedSoundBuffer: _arrayBuffer, cachedSoundPath: soundPath })
     })
   }
 
@@ -394,6 +393,7 @@ export default class AlarmApp extends React.Component<any, State> {
   // Modification controls handlers
   addDefaultAlarm = () => {
     const { settings } = this.state
+    console.log('SETTINGS', settings)
 
     const alarm = new Alarm({
       description: settings.descAlarm, alarmState: settings.alarmState,
@@ -409,14 +409,14 @@ export default class AlarmApp extends React.Component<any, State> {
     switch(settings.alarmType) {
       case 'timer':
         alarm.setTimer({
-          description: settings.descTimer, alarmState: 'disabled',
-          timerTimeToWait: alarm.timerTimeToWait || settings.timerTimeToWait,
+          description: settings.descTimer, alarmState: settings.alarmState,
+          timerTimeToWait: settings.timerTimeToWait,
         })
         break
       case 'stopwatch':
         alarm.setStopwatch({
-          description: settings.descStopwatch, alarmState: 'disabled',
-          stopwatchTotalTime: 0,
+          description: settings.descStopwatch, alarmState: settings.alarmState,
+          stopwatchTotalTime: settings.stopwatchTotalTime,
         })
     }
 
@@ -593,7 +593,7 @@ export default class AlarmApp extends React.Component<any, State> {
         </div>
 
         {(editIsEnabled && selectedAlarmIndex !== null) &&
-        <div className="settings-container" style={{
+        <div className="edit-container" style={{
           width: settings.editWidthPx+'px', height: settings.editHeightPx+'px'}}>
           <EditAlarm
             alarm={alarms[selectedAlarmIndex]}
