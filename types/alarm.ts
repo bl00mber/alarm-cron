@@ -74,6 +74,7 @@ export interface SettingsFields {
   postponeOffset: number;
   autoStopAfterMMIsActive: boolean;
   autoStopAfterMM: number;
+  showNotification: boolean;
 
   listWidthPx: number;
   listHeightPx: number;

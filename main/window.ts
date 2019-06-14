@@ -9,6 +9,10 @@ export const createNewWindow = (windowId: string, options: object = {}): Browser
   if (process.env.NODE_ENV !== 'production') {
     // @ts-ignore
     options.resizable = true
+    if (windowId === 'main') {
+      // @ts-ignore
+      options.devTools = true
+    }
   }
 
   const newWindow = new BrowserWindow({

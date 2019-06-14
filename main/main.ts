@@ -1,11 +1,14 @@
 import * as path from 'path'
 import { app, BrowserWindow, globalShortcut } from 'electron'
+import { Menu, Tray, Notification } from 'electron'
 import { ipcMain } from 'electron'
 import * as Store from 'electron-store'
 
 import ApplicationMenu from './application-menu'
-import { createNewWindow, getWindow } from './window'
+import TrayMenu from './tray-menu'
 import { defaultSettings } from './default-settings'
+import { createNewWindow, getWindow } from './window'
+
 import Alarm from '../classes/Alarm'
 import { SettingsFields } from '../types/alarm'
 
@@ -38,15 +41,29 @@ ipcMain.on('restore-default-settings', (event: any) => {
   if (settings) settings.webContents.send('res-settings', defaultSettings)
 })
 
+ipcMain.on('show-notification', (event: any, title: string, body: string) => {
+  const notification = new Notification({title, body})
+  notification.show()
+})
+
 
 app.on('ready', () => {
-  let mainWindow: BrowserWindow | null = null
+  const settings = store.get('settings')
+  // @ts-ignore
+  const trayMenu = new TrayMenu(settings.trayMonoIcon)
+  trayMenu.setTrayMenu()
 
-  if (process.env.NODE_ENV === 'production') {
-    mainWindow = createNewWindow('main')
-  } else {
-    mainWindow = createNewWindow('main', {devTools: true, resizable: true})
-  }
+  ipcMain.on('icon-tray', (event: any) => {
+    trayMenu.setDefaultIcon()
+  })
+
+  ipcMain.on('icon-tray-active', (event: any) => {
+    trayMenu.setActiveIcon()
+  })
+
+
+  let mainWindow: BrowserWindow | null = null
+  mainWindow = createNewWindow('main')
 
   if (process.env.NODE_ENV === 'production') {
     mainWindow.loadURL('file://'+path.resolve(__dirname, '..', 'index.html'))
@@ -72,8 +89,19 @@ app.on('ready', () => {
     globalShortcut.register('f5', function() {
       const focusedWindow = BrowserWindow.getFocusedWindow()
       if (focusedWindow) focusedWindow.reload()
-  	})
+    })
   }
+
+
+  mainWindow.on('close', (event) => {
+    // @ts-ignore
+    if (app.quitting) {
+      mainWindow = null
+    } else {
+      event.preventDefault()
+      mainWindow.hide()
+    }
+  })
 
   // App quits when user presses Cmd+Q or selects quit from app menu, but not
   // when all windows are closed
@@ -81,3 +109,17 @@ app.on('ready', () => {
     app.quit()
   })
 })
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit()
+  }
+})
+
+app.on('activate', () => {
+  const mainWindow = getWindow('main')
+  if (mainWindow) mainWindow.show()
+})
+
+// @ts-ignore
+app.on('before-quit', () => app.quitting = true)

@@ -29,6 +29,7 @@ interface State {
   selectedAlarmIndex: number | null,
   editIsEnabled: boolean,
   player: AudioBufferSourceNode | null,
+  isPlaying: boolean,
   cachedSoundBuffer: ArrayBuffer | null,
   cachedSoundPath: string | null,
 }
@@ -79,11 +80,14 @@ export default class AlarmApp extends React.Component<any, State> {
       editIsEnabled: true,
 
       player: null,
+      isPlaying: false,
       cachedSoundBuffer: null,
       cachedSoundPath: null,
     }
 
     ipcRenderer.on('res-settings', this.updateStateSettings)
+    ipcRenderer.on('postpone-all-active-alarms', this.postponeAllActiveAlarms)
+    ipcRenderer.on('reset-all-active-alarms', this.resetAllActiveAlarms)
 
     window.addEventListener('unload', (e) => {
       const { store, settings, alarms } = this.state
@@ -118,7 +122,7 @@ export default class AlarmApp extends React.Component<any, State> {
   }
 
   alarmsHandler = () => {
-    const { settings, alarms, currentTime, player } = this.state
+    const { settings, alarms, currentTime, player, isPlaying } = this.state
     let activeAlarmsCount = 0
 
     const alarmsUpd = alarms.map((alarm, index) => {
@@ -128,6 +132,8 @@ export default class AlarmApp extends React.Component<any, State> {
 
             if (!alarm.autoStopAlarm) {
               alarm.alarmState = 'active'
+              if (settings.showNotification) {
+                this.showNotification(capitalize(alarm.alarmType), alarm.description)}
               if (alarm.playSound) this.playSound(alarm.soundPath, alarm.repeatSound)
             } else {
               alarm.resetAlarm()
@@ -141,6 +147,8 @@ export default class AlarmApp extends React.Component<any, State> {
 
             if (!alarm.autoStopAlarm) {
               alarm.alarmState = 'active'
+              if (settings.showNotification) {
+                this.showNotification(capitalize(alarm.alarmType), alarm.description)}
               if (alarm.playSound) this.playSound(alarm.soundPath, alarm.repeatSound)
             } else {
               alarm.resetTimer()
@@ -174,13 +182,23 @@ export default class AlarmApp extends React.Component<any, State> {
       return alarm
     })
 
-    if (player && activeAlarmsCount === 0) player.stop()
+    if (player && isPlaying && activeAlarmsCount === 0) this.stopPlayer()
     this.setState({ alarms: alarmsUpd })
   }
 
+  showNotification (title: string, body: string) {
+    if (title === body) {
+      ipcRenderer.send('show-notification', title, '')
+    } else {
+      ipcRenderer.send('show-notification', title, body)
+    }
+  }
+
   playSound = (soundPath: string, repeatSound: boolean) => {
-    const { player, cachedSoundBuffer, cachedSoundPath } = this.state
-    if (player) player.stop()
+    this.stopPlayer()
+    const { cachedSoundBuffer, cachedSoundPath } = this.state
+
+    ipcRenderer.send('icon-tray-active')
 
     if (cachedSoundBuffer !== null && cachedSoundPath === soundPath) {
       const arrayBuffer = cachedSoundBuffer // check if will work without
@@ -208,13 +226,23 @@ export default class AlarmApp extends React.Component<any, State> {
       player.start(0, 0)
       if (repeatSound) player.loop = true
 
-      this.setState({ player, cachedSoundBuffer: _arrayBuffer, cachedSoundPath: soundPath })
+      this.setState({ player, isPlaying: true, cachedSoundBuffer: _arrayBuffer,
+        cachedSoundPath: soundPath })
     })
   }
 
+  stopPlayer = () => {
+    const { player } = this.state
+    this.setState({ isPlaying: false })
+    if (player) {
+      player.stop()
+      ipcRenderer.send('icon-tray')
+    }
+  }
+
   stopPlayerAndCheckForActive = () => {
-    const { alarms, player } = this.state
-    if (player) player.stop()
+    this.stopPlayer()
+    const { alarms } = this.state
 
     setTimeout(() => {
     for (let alarm of alarms) {
@@ -393,7 +421,6 @@ export default class AlarmApp extends React.Component<any, State> {
   // Modification controls handlers
   addDefaultAlarm = () => {
     const { settings } = this.state
-    console.log('SETTINGS', settings)
 
     const alarm = new Alarm({
       description: settings.descAlarm, alarmState: settings.alarmState,
@@ -523,8 +550,8 @@ export default class AlarmApp extends React.Component<any, State> {
 
   // Process all alarms
   resetAllActiveAlarms = () => {
-    const { alarms, player } = this.state
-    if (player) player.stop()
+    this.stopPlayer()
+    const { alarms } = this.state
 
     alarms.forEach((alarm, index) => {
       if (alarm.alarmState === 'active') {
@@ -542,12 +569,12 @@ export default class AlarmApp extends React.Component<any, State> {
   }
 
   postponeAllActiveAlarms = () => {
-    const { settings, alarms, player } = this.state
-    if (player) player.stop()
+    this.stopPlayer()
+    const { settings, alarms } = this.state
 
     alarms.forEach((alarm, index) => {
       if (alarm.alarmState === 'active' &&
-        alarm.alarmType === 'alarm' || alarm.alarmType === 'timer') {
+        (alarm.alarmType === 'alarm' || alarm.alarmType === 'timer')) {
         const updAlarm = cloneDeep(alarms[index])
 
         if (alarm.alarmType === 'alarm') {

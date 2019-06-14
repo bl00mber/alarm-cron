@@ -253,7 +253,7 @@ export default class Settings extends React.Component<any, State> {
 
           <div className="settings-header">Program settings</div>
 
-          {/* postponeOffset, autoStopAfterMMIsActive, autoStopAfterMM */}
+          {/* postponeOffset, autoStopAfterMMIsActive, autoStopAfterMM, showNotification */}
           <div className="settings__block">
             <input type="number" min="0" value={settings.postponeOffset}
               onChange={e => {
@@ -276,6 +276,18 @@ export default class Settings extends React.Component<any, State> {
               }}}
             />
             <div className="margin-left">minutes</div>
+          </div>
+
+          <div className="settings__block">
+            <input type="checkbox" id="show-notification" checked={settings.showNotification}
+              onChange={() => this.updateSettingsKey('showNotification', !settings.showNotification)} />
+            <label htmlFor="show-notification">Show notification</label>
+          </div>
+
+          <div className="settings__block">
+            <input type="checkbox" id="tray-mono-icon" checked={settings.trayMonoIcon}
+              onChange={() => this.updateSettingsKey('trayMonoIcon', !settings.trayMonoIcon)} />
+            <label htmlFor="tray-mono-icon">Tray mono icon (restart needed)</label>
           </div>
 
 

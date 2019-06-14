@@ -1,14 +1,6 @@
 import { app } from 'electron'
 import { SettingsFields } from '../types/alarm'
 
-let soundPath
-
-if (process.env.NODE_ENV === 'production') {
-  soundPath = app.getAppPath()+'/resources/default.mp3'
-} else {
-  soundPath = app.getAppPath()+'/assets/sounds/default.mp3'
-}
-
 export const defaultSettings: SettingsFields = {
   alarmType: 'alarm',
   descAlarm: 'Alarm',
@@ -22,7 +14,7 @@ export const defaultSettings: SettingsFields = {
   repeatDaysOfWeek: {mon: false, tue: false, wed: false, thu: false, fri: false, sat: false, sun: false},
   repeatCountdown: 1,
   playSound: true,
-  soundPath,
+  soundPath: app.getAppPath()+'/resources/default.mp3',
   repeatSound: true,
   startApplication: false,
   autoStopAlarm: false,
@@ -34,6 +26,8 @@ export const defaultSettings: SettingsFields = {
   postponeOffset: 300,
   autoStopAfterMMIsActive: true,
   autoStopAfterMM: 10,
+  showNotification: true,
+  trayMonoIcon: false,
 
   listWidthPx: 330,
   listHeightPx: 552,

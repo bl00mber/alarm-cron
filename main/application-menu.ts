@@ -17,10 +17,6 @@ export default class ApplicationMenu {
     }
   }
 
-  setApplicationMenu () {
-    Menu.setApplicationMenu(this.menu)
-  }
-
   getMenuTemplate () {
     return [{
       label: app.getName(),
@@ -41,5 +37,9 @@ export default class ApplicationMenu {
         }
       ]
     }]
+  }
+
+  setApplicationMenu () {
+    Menu.setApplicationMenu(this.menu)
   }
 }
