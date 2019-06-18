@@ -30,7 +30,6 @@ export const defaultSettings: SettingsFields = {
   trayMonoIcon: false,
 
   listWidthPx: 330,
-  listHeightPx: 552,
   editWidthPx: 380,
-  editHeightPx: 622,
+  appHeightPx: 622,
 }

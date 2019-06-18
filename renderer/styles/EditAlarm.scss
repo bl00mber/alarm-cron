@@ -29,21 +29,21 @@
 
 .edit__btn {
   cursor: pointer;
-  height: 30px;
+  position: relative;
+  height: 32px;
   border-radius: 7px;
   flex-grow: 1;
-  margin-top: 5px;
-  margin-bottom: 5px;
+  margin-top: 4px;
+  margin-bottom: 4px;
 
-  // Test
   &.pause {
     background: orange;
   }
   &.enable {
-    background: green;
+    background: #2eb32e;
   }
   &.reset {
-    background: red;
+    background: #ff3e3e;
   }
 }
 

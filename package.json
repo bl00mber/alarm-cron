@@ -2,17 +2,14 @@
   "name": "alarm-cron",
   "version": "0.1.0",
   "description": "Create alerts, timers and stopwatches from the tray",
-  "main": "./dist/main.js",
+  "main": "./bundle/main.js",
   "scripts": {
-    "start": "npm run dev:main && npm-run-all --parallel dev:renderer serve:main",
+    "start": "npm run bundle:main && npm-run-all --parallel dev:renderer serve:main",
     "dev:renderer": "TARGET=dev NODE_ENV=development webpack-dev-server --progress",
-    "dev:main": "rm -rf ./dist/* && TARGET=dev NODE_ENV=development webpack --env.main --mode development",
+    "bundle:main": "TARGET=dev NODE_ENV=development webpack --env.main --mode development",
     "serve:main": "NODE_ENV=development electron .",
     "test": "jest",
-    "package-linux": "electron-packager . --overwrite --extra-resource='resources/default.mp3' --extra-resource='resources/Evacuation-Test-By-The-River-Japan.mp3' --extra-resource='resources/Ringing-Train-Station-Da-Nang-Vietnam.mp3' --extra-resource='resources/Ringing-Train-Station-Street-Da-Nang-Vietnam.mp3' --extra-resource='resources/Telemetry-Tech-Data-23.mp3' --platform=linux --arch=x64 --icon='resources/icon/icon.png' --prune=true --out=build",
-    "package-win": "electron-packager . --overwrite --extra-resource='resources/default.mp3' --extra-resource='resources/Evacuation-Test-By-The-River-Japan.mp3' --extra-resource='resources/Ringing-Train-Station-Da-Nang-Vietnam.mp3' --extra-resource='resources/Ringing-Train-Station-Street-Da-Nang-Vietnam.mp3' --extra-resource='resources/Telemetry-Tech-Data-23.mp3' --platform=win32 --asar=true --arch=ia32 --icon='resources/icon/icon.ico' --prune=true --out=build --version-string.CompanyName='Nick Reiley' --version-string.FileDescription='Time management' --version-string.ProductName='Alarm'",
-    "package-mac": "electron-packager . --overwrite --extra-resource='resources/default.mp3' --extra-resource='resources/Evacuation-Test-By-The-River-Japan.mp3' --extra-resource='resources/Ringing-Train-Station-Da-Nang-Vietnam.mp3' --extra-resource='resources/Ringing-Train-Station-Street-Da-Nang-Vietnam.mp3' --extra-resource='resources/Telemetry-Tech-Data-23.mp3' --platform=darwin --arch=x64 --icon='resources/icon/icon.icns' --prune=true --out",
-    "build": "package-linux && package-win && package-mac"
+    "build": "rm -rf ./build/* && ./build.sh"
   },
   "repository": {
     "type": "git",

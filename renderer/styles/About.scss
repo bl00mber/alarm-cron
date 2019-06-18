@@ -4,7 +4,15 @@
   align-items: center;
   width: 100%;
   background: #f9f9fd;
-  & div {
+  & div, .about-copyright {
     margin-bottom: 5px;
   }
+  & p {
+    margin: 0;
+    text-align: center;
+  }
+}
+
+.toggle-icon-copyright {
+  cursor: pointer;
 }

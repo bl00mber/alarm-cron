@@ -121,11 +121,14 @@ export default class Alarm implements AlarmFields {
 
   /**
    * Enable
-   * Expired alarms/timers cannot be enabled
+   * Expired alarms can be enabled only if RepeatType !== 'once'
   **/
   enableAlarm () {
     if (this.alarmState !== 'disabled') return;
-    if (new Date().getTime() > this.timeToActivate.getTime()) return; // Expired
+    if (new Date().getTime() > this.timeToActivate.getTime()) { // Expired
+      if (this.repeatType === 'once') { return }
+      else { this.setNextCountdownDate() }
+    }
     this.alarmState = 'enabled'
   }
 

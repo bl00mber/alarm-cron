@@ -291,7 +291,7 @@ export default class Settings extends React.Component<any, State> {
           </div>
 
 
-          {/* listWidthPx, listHeightPx, editWidthPx, editHeightPx */}
+          {/* listWidthPx, editWidthPx, appHeightPx */}
           <div className="settings__block">
             <input type="number" min="0" value={settings.listWidthPx}
               onChange={e => {
@@ -300,16 +300,6 @@ export default class Settings extends React.Component<any, State> {
               }}}
             />
             <div className="margin-left">alarms list width px</div>
-          </div>
-
-          <div className="settings__block">
-            <input type="number" min="0" value={settings.listHeightPx}
-              onChange={e => {
-                if (+e.target.value >= +e.target.min) {
-                  this.updateSettingsKey('listHeightPx', e.target.value)
-              }}}
-            />
-            <div className="margin-left">alarms list height px</div>
           </div>
 
           <div className="settings__block">
@@ -323,13 +313,13 @@ export default class Settings extends React.Component<any, State> {
           </div>
 
           <div className="settings__block">
-            <input type="number" min="0" value={settings.editHeightPx}
+            <input type="number" min="0" value={settings.appHeightPx}
               onChange={e => {
                 if (+e.target.value >= +e.target.min) {
-                  this.updateSettingsKey('editHeightPx', e.target.value)
+                  this.updateSettingsKey('appHeightPx', e.target.value)
               }}}
             />
-            <div className="margin-left">edit block height px</div>
+            <div className="margin-left">edit app height px</div>
           </div>
 
 

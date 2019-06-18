@@ -13,7 +13,7 @@ return {
                 path.resolve(ROOT_PATH, 'renderer', 'renderer.tsx'),
   target: MAIN ? 'electron-main' : 'electron-renderer',
   output: {
-    path: path.resolve(ROOT_PATH, 'dist'),
+    path: path.resolve(ROOT_PATH, 'bundle'),
     filename: MAIN ? 'main.js' : 'renderer.js'
   },
   resolve: {
@@ -59,14 +59,14 @@ return {
     ]
   },
   devServer: (DEV && !MAIN) ? {
-    publicPath: 'http://localhost:8080/dist/',
+    publicPath: 'http://localhost:8080/bundle/',
     port: '8080',
     host: '0.0.0.0',
     historyApiFallback: true,
     hot: true,
     inline: true,
     progress: true,
-    index: 'src/assets/index.html'
+    index: 'index.html'
   } : {},
   optimization: DEV ? {} : {minimizer: [new TerserPlugin()]},
   plugins: [

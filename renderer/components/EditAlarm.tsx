@@ -31,6 +31,7 @@ interface Props {
   runAlarmHandler: (alarmType: AlarmType, alarmState: AlarmStateType, alarmIndex?: number) => void,
   runCustomAlarmHandler: (handlerKey: string, args?: any[], alarmIndex?: number) => void,
   getAlarmHandlerClass: (alarmState: AlarmStateType) => string,
+  getAlarmHandlerImage: (alarmState: AlarmStateType) => string,
 }
 
 interface State {
@@ -263,7 +264,7 @@ export default class EditAlarm extends React.Component<Props, State> {
   render () {
     const { alarm, settings, currentTime } = this.props
     const { stopPlayerAndCheckForActive, addSecondsToNow } = this.props
-    const { alarmType } = alarm
+    const { alarmType, alarmState } = alarm
     return (
       <div className="edit-controls-container">
         <div className="alarm-type padding-controls">
@@ -476,20 +477,33 @@ export default class EditAlarm extends React.Component<Props, State> {
         {(alarmType === 'timer' || alarmType === 'stopwatch') &&
         <div className="edit__section padding">
           <div className="edit__block">
-            <div className={"edit__btn margin-right "+
-              this.props.getAlarmHandlerClass(alarm.alarmState)}
+            <div className={"edit__btn " +
+              ((alarmState !== 'disabled' || (alarmType === 'stopwatch' && Boolean(alarm.stopwatchTotalTime))) ? 'margin-right ' : '') +
+              this.props.getAlarmHandlerClass(alarmState)}
+
               onClick={() => {
-                if (alarm.alarmState === 'active') stopPlayerAndCheckForActive()
-                this.props.runAlarmHandler(alarmType, alarm.alarmState)
-              }}></div>
+                if (alarmState === 'active') stopPlayerAndCheckForActive()
+                this.props.runAlarmHandler(alarmType, alarmState)
+              }}>
+              <div className="alarm-handler__btn-img"
+                style={{backgroundImage: this.props.getAlarmHandlerImage(alarmState)}}></div>
+            </div>
 
-            {(alarm.alarmState === 'enabled' && alarmType === 'timer') &&
+            {(alarmState === 'enabled' && alarmType === 'timer') &&
             <div className="edit__btn reset"
-              onClick={() => this.props.runCustomAlarmHandler('resetTimer', [true])}></div>}
+              onClick={() => this.props.runCustomAlarmHandler('resetTimer', [true])}>
 
-            {(alarm.alarmState === 'enabled' && alarmType === 'stopwatch') &&
+              <div className="alarm-handler__btn-img"
+                style={{backgroundImage: this.props.getAlarmHandlerImage('active')}}></div>
+            </div>}
+
+            {(alarmType === 'stopwatch') && (alarmState === 'enabled' || Boolean(alarm.stopwatchTotalTime)) &&
             <div className="edit__btn reset"
-              onClick={() => this.props.runCustomAlarmHandler('resetStopwatch')}></div>}
+              onClick={() => this.props.runCustomAlarmHandler('resetStopwatch')}>
+
+              <div className="alarm-handler__btn-img"
+                style={{backgroundImage: this.props.getAlarmHandlerImage('active')}}></div>
+            </div>}
           </div>
         </div>}
       </div>

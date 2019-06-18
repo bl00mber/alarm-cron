@@ -42,11 +42,23 @@ div {
 }
 
 .btn {
-  border: 1px solid black;
   width: 35px;
   height: 35px;
-  margin-right: 10px;
+  margin-right: 5px;
   border-radius: 5px;
+
+  &.delete-alarm {
+    background-size: 22px;
+  }
+  &.process-all-alarms {
+    background-size: 26px;
+  }
+}
+
+.btn, .img-alarm-type, .alarm-handler__btn-img {
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 24px;
 }
 
 .btn-padding {
@@ -54,7 +66,7 @@ div {
   margin-right: 15px;
   border-radius: 7px;
   background: #fff;
-  box-shadow: 0 2px 15px $shadow;
+  box-shadow: 0 2px 7px $shadow;
   font-weight: 500;
 }
 
@@ -65,17 +77,28 @@ div {
 }
 
 .alarm-handler__btn {
+  cursor: pointer;
+  position: relative;
   border-radius: 0 8px 8px 0;
-  // Test
+
   &.pause {
     background: orange;
   }
   &.enable {
-    background: green;
+    background: #2eb32e;
   }
   &.reset {
-    background: red;
+    background: #ff3e3e;
   }
+}
+
+.alarm-handler__btn-img {
+  pointer-events: none;
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  top: 0;
+  left: 0;
 }
 
 .btn-last {
@@ -91,13 +114,13 @@ div {
 }
 
 .edit-container {
-  background: linear-gradient(#f9f9fd, #f5f6ff);
+  background: linear-gradient(#f9f9fd, #f1f3ff);
 }
 
 .alarms-controls {
   align-items: center;
   background: #f9f9fd;
-  height: 70px;
+  height: 55px;
   user-select: none;
 }
 

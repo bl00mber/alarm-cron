@@ -21,6 +21,23 @@ import { SettingsFields, AlarmType, AlarmStateType,
 
 import '../styles/AlarmApp.scss'
 
+import imgAlarm from '../assets/img/alarm.png'
+import imgStopwatch from '../assets/img/stopwatch.png'
+import imgTimer from '../assets/img/timer.png'
+
+import imgNew from '../assets/img/new.png'
+import imgEdit from '../assets/img/edit.png'
+import imgDelete from '../assets/img/delete.png'
+
+import imgPlay from '../assets/img/play.png'
+import imgPause from '../assets/img/pause.png'
+import imgStop from '../assets/img/stop.png'
+import imgPostpone from '../assets/img/postpone.png'
+
+import imgWhitePlay from '../assets/img/white-play.png'
+import imgWhitePause from '../assets/img/white-pause.png'
+import imgWhiteStop from '../assets/img/white-stop.png'
+
 interface State {
   store: Store,
   currentTime: Date,
@@ -116,25 +133,29 @@ export default class AlarmApp extends React.Component<any, State> {
     if (this.state.editIsEnabled && this.state.selectedAlarmIndex !== null)
     { width = settings.listWidthPx + settings.editWidthPx }
     else { width = settings.listWidthPx }
-    // remote.getCurrentWindow().setSize(width, settings.editHeightPx) // prod
-    remote.getCurrentWindow().setSize(1200, 800)
+    remote.getCurrentWindow().setSize(width, settings.appHeightPx)
+    // remote.getCurrentWindow().setSize(1200, 800) // test
     console.log(remote.getCurrentWindow().getSize())
   }
 
   alarmsHandler = () => {
     const { settings, alarms, currentTime, player, isPlaying } = this.state
     let activeAlarmsCount = 0
+    let isPlayActivated = false // only play 1 alarm per second
 
     const alarmsUpd = alarms.map((alarm, index) => {
       if (alarm.alarmState === 'enabled') {
         if (alarm.alarmType === 'alarm') {
-          if (currentTime.getTime() > alarm.timeToActivate.getTime()) {
+          if (currentTime.getTime() > alarm.timeToActivate.getTime() && isPlayActivated === false) {
 
             if (!alarm.autoStopAlarm) {
               alarm.alarmState = 'active'
               if (settings.showNotification) {
                 this.showNotification(capitalize(alarm.alarmType), alarm.description)}
-              if (alarm.playSound) this.playSound(alarm.soundPath, alarm.repeatSound)
+              if (alarm.playSound) {
+                isPlayActivated = true
+                this.playSound(alarm.soundPath, alarm.repeatSound)
+              }
             } else {
               alarm.resetAlarm()
             }
@@ -142,14 +163,17 @@ export default class AlarmApp extends React.Component<any, State> {
           }
         }
         else if (alarm.alarmType === 'timer') {
-          alarm.timerTimeToWaitCountdown -= 1
-          if (alarm.timerTimeToWaitCountdown === 0) {
+          if (alarm.timerTimeToWaitCountdown > 0) alarm.timerTimeToWaitCountdown -= 1
+          if (alarm.timerTimeToWaitCountdown === 0 && isPlayActivated === false) {
 
             if (!alarm.autoStopAlarm) {
               alarm.alarmState = 'active'
               if (settings.showNotification) {
                 this.showNotification(capitalize(alarm.alarmType), alarm.description)}
-              if (alarm.playSound) this.playSound(alarm.soundPath, alarm.repeatSound)
+              if (alarm.playSound) {
+                isPlayActivated = true
+                this.playSound(alarm.soundPath, alarm.repeatSound)
+              }
             } else {
               alarm.resetTimer()
             }
@@ -349,9 +373,17 @@ export default class AlarmApp extends React.Component<any, State> {
 
   getAlarmIconClass (alarmType: AlarmType): string {
     switch(alarmType) {
-      case 'alarm': return 'icon-alarm padding'
-      case 'timer': return 'icon-timer padding'
-      case 'stopwatch': return 'icon-stopwatch padding'
+      case 'alarm': return 'img-alarm-type icon-alarm padding'
+      case 'timer': return 'img-alarm-type icon-timer padding'
+      case 'stopwatch': return 'img-alarm-type icon-stopwatch padding'
+    }
+  }
+
+  getAlarmIconImage (alarmType: AlarmType): string {
+    switch(alarmType) {
+      case 'alarm': return `url(${imgAlarm})`
+      case 'timer': return `url(${imgTimer})`
+      case 'stopwatch': return `url(${imgStopwatch})`
     }
   }
 
@@ -364,6 +396,9 @@ export default class AlarmApp extends React.Component<any, State> {
           <div className="alarm-countdown-child">
             {this.toDDMMHHmmss(alarm.timeToActivate)}
           </div>
+          <div className="alarm-countdown-child">
+            {this.toDDHHmmss(ssRemained, alarm.alarmType)}
+          </div>
 
           {this.repeatToJSX(
             alarm.repeatType,
@@ -371,10 +406,6 @@ export default class AlarmApp extends React.Component<any, State> {
             alarm.repeatCountdown,
             alarm.repeatFrom,
           )}
-
-          <div className="alarm-countdown-child">
-            {this.toDDHHmmss(ssRemained, alarm.alarmType)}
-          </div>
         </div>
       case 'timer':
         return <div className={"alarm-countdown"+
@@ -401,7 +432,8 @@ export default class AlarmApp extends React.Component<any, State> {
               this.setState({ selectedAlarmIndex: index }, this.updateAppSize)
             }
           }}>
-          <div className={this.getAlarmIconClass(alarm.alarmType)}></div>
+          <div className={this.getAlarmIconClass(alarm.alarmType)}
+            style={{backgroundImage: this.getAlarmIconImage(alarm.alarmType)}}></div>
           {this.alarmCountdownsJSX(alarm.alarmType, alarm)}
           <div className="alarm-description padding" style={
             (alarm.repeatType!=='once')?
@@ -412,7 +444,10 @@ export default class AlarmApp extends React.Component<any, State> {
           onClick={() => {
             if (alarm.alarmState === 'active') this.stopPlayerAndCheckForActive()
             this.runAlarmHandler(alarm.alarmType, alarm.alarmState, index)
-          }}></div>
+          }}>
+          <div className="alarm-handler__btn-img"
+            style={{backgroundImage: this.getAlarmHandlerImage(alarm.alarmState)}}></div>
+        </div>
       </div>
     )})
     return alarmsJSX
@@ -515,7 +550,7 @@ export default class AlarmApp extends React.Component<any, State> {
     this.updateAlarmInstance(alarm, alarmIndex)
   }
 
-  getAlarmHandlerKey = (alarmType: AlarmType, alarmState: AlarmStateType): string => {
+  getAlarmHandlerKey (alarmType: AlarmType, alarmState: AlarmStateType): string {
     switch(alarmType) {
       case 'alarm':
         switch(alarmState) {
@@ -540,7 +575,7 @@ export default class AlarmApp extends React.Component<any, State> {
     }
   }
 
-  getAlarmHandlerClass = (alarmState: AlarmStateType): string => {
+  getAlarmHandlerClass (alarmState: AlarmStateType): string {
     switch(alarmState) {
       case 'enabled': return 'pause'
       case 'disabled': return 'enable'
@@ -548,7 +583,45 @@ export default class AlarmApp extends React.Component<any, State> {
     }
   }
 
+  getAlarmHandlerImage (alarmState: AlarmStateType): string {
+    switch(alarmState) {
+      case 'enabled': return `url(${imgWhitePause})`
+      case 'disabled': return `url(${imgWhitePlay})`
+      case 'active': return `url(${imgWhiteStop})`
+    }
+  }
+
   // Process all alarms
+  playAllDisabledAlarms = () => {
+    const { alarms } = this.state
+
+    alarms.forEach((alarm, index) => {
+      if (alarm.alarmState === 'disabled') {
+        const updAlarm = cloneDeep(alarms[index])
+        if (alarm.alarmType === 'alarm') { updAlarm.enableAlarm() }
+        else if (alarm.alarmType === 'timer') { updAlarm.enableTimer() }
+        else if (alarm.alarmType === 'stopwatch') { updAlarm.enableStopwatch() }
+        alarms[index] = updAlarm
+      }
+    })
+    this.setState({ alarms })
+  }
+
+  pauseAllEnabledAlarms = () => {
+    const { alarms } = this.state
+
+    alarms.forEach((alarm, index) => {
+      if (alarm.alarmState === 'enabled') {
+        const updAlarm = cloneDeep(alarms[index])
+        if (alarm.alarmType === 'alarm') { updAlarm.pauseAlarm() }
+        else if (alarm.alarmType === 'timer') { updAlarm.pauseTimer() }
+        else if (alarm.alarmType === 'stopwatch') { updAlarm.pauseStopwatch() }
+        alarms[index] = updAlarm
+      }
+    })
+    this.setState({ alarms })
+  }
+
   resetAllActiveAlarms = () => {
     this.stopPlayer()
     const { alarms } = this.state
@@ -556,12 +629,8 @@ export default class AlarmApp extends React.Component<any, State> {
     alarms.forEach((alarm, index) => {
       if (alarm.alarmState === 'active') {
         const updAlarm = cloneDeep(alarms[index])
-        if (alarm.alarmType === 'alarm') {
-          updAlarm.resetAlarm()
-        }
-        else if (alarm.alarmType === 'timer') {
-          updAlarm.resetTimer()
-        }
+        if (alarm.alarmType === 'alarm') { updAlarm.resetAlarm() }
+        else if (alarm.alarmType === 'timer') { updAlarm.resetTimer() }
         alarms[index] = updAlarm
       }
     })
@@ -591,37 +660,54 @@ export default class AlarmApp extends React.Component<any, State> {
     const { settings, alarms, currentTime, selectedAlarmIndex, editIsEnabled } = this.state
     return (
       <div className="app-container">
-        <div className="alarms-container">
+        <div className="alarms-container" style={{
+          width: settings.listWidthPx+'px', height: settings.appHeightPx+'px'}}>
+
           <div className="alarms-controls">
             <div className="alarms-modification-controls padding-controls">
               <div className="new-alarm btn"
-                onClick={this.addDefaultAlarm}></div>
+                onClick={this.addDefaultAlarm}
+                style={{backgroundImage: `url(${imgNew})`}}></div>
+
               <div className={"edit-alarm btn" + (editIsEnabled ? ' active': '')}
                 onClick={() => this.setState({
                   editIsEnabled: !editIsEnabled,
                   selectedAlarmIndex: editIsEnabled ? null : selectedAlarmIndex,
-                }, this.updateAppSize)}></div>
+                }, this.updateAppSize)}
+                style={{backgroundImage: `url(${imgEdit})`}}></div>
+
               <div className="delete-alarm btn btn-last"
-                onClick={this.deleteSelectedAlarmIndex}></div>
+                onClick={this.deleteSelectedAlarmIndex}
+                style={{backgroundImage: `url(${imgDelete})`}}></div>
             </div>
 
             <div className="alarms-process-controls padding-controls">
-              <div className="stop-active-alarms btn"
-                onClick={this.resetAllActiveAlarms}></div>
+              <div className="process-all-alarms btn"
+                onClick={this.playAllDisabledAlarms}
+                style={{backgroundImage: `url(${imgPlay})`}}></div>
+
+              <div className="process-all-alarms btn"
+                onClick={this.pauseAllEnabledAlarms}
+                style={{backgroundImage: `url(${imgPause})`}}></div>
+
+              <div className="process-all-alarms btn"
+                onClick={this.resetAllActiveAlarms}
+                style={{backgroundImage: `url(${imgStop})`}}></div>
+
               <div className="postpone-active-alarms btn btn-last"
-                onClick={this.postponeAllActiveAlarms}></div>
+                onClick={this.postponeAllActiveAlarms}
+                style={{backgroundImage: `url(${imgPostpone})`}}></div>
             </div>
           </div>
 
-          <div className="alarms-list" style={{
-            width: settings.listWidthPx+'px', height: settings.listHeightPx+'px'}}>
+          <div className="alarms-list">
             {(alarms.length > 0) && this.alarmsJSX()}
           </div>
         </div>
 
         {(editIsEnabled && selectedAlarmIndex !== null) &&
         <div className="edit-container" style={{
-          width: settings.editWidthPx+'px', height: settings.editHeightPx+'px'}}>
+          width: settings.editWidthPx+'px', height: settings.appHeightPx+'px'}}>
           <EditAlarm
             alarm={alarms[selectedAlarmIndex]}
             settings={settings}
@@ -635,6 +721,7 @@ export default class AlarmApp extends React.Component<any, State> {
             runAlarmHandler={this.runAlarmHandler}
             runCustomAlarmHandler={this.runCustomAlarmHandler}
             getAlarmHandlerClass={this.getAlarmHandlerClass}
+            getAlarmHandlerImage={this.getAlarmHandlerImage}
           />
           <div className="settings-footer padding">
             <a className="copyright" target="_blank"

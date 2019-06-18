@@ -77,7 +77,6 @@ export interface SettingsFields {
   showNotification: boolean;
 
   listWidthPx: number;
-  listHeightPx: number;
   editWidthPx: number;
-  editHeightPx: number;
+  appHeightPx: number;
 }

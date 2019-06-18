@@ -21,7 +21,7 @@ export const createNewWindow = (windowId: string, options: object = {}): Browser
     ...options
   })
 
-  newWindow.on('closed', function() {
+  newWindow.on('closed', () => {
     currentWindows.delete(windowId)
   })
 
