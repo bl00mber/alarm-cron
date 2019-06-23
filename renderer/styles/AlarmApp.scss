@@ -105,7 +105,7 @@ div {
   margin-right: 0;
 }
 
-.alarms-container, .edit-container, .alarms-list, .alarm-countdown {
+.alarms-container, .edit-container, .alarms-list, .alarm-countdown, .alarm-container {
   flex-direction: column;
 }
 
@@ -136,11 +136,24 @@ div {
   border-radius: 8px;
   box-shadow: 0 2px 8px $shadow;
   border: 1px solid #ddddff;
+  border-bottom: none;
   min-width: 270px;
   width: auto;
   &.active {
     box-shadow: inset 0 3px 5px $shadow;
   }
+}
+
+.alarm-main-block {
+  flex-grow: 1;
+  border-bottom: 1px solid #ddddff;
+  border-radius: inherit;
+}
+
+.alarm-repeat {
+  padding: 6px 5px 6px 12px;
+  border-bottom: 1px solid #ddddff;
+  border-radius: inherit;
 }
 
 .alarm-type {

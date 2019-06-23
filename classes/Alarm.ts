@@ -11,8 +11,11 @@ import { AlarmFields, AlarmType, AlarmStateType,
 
 export default class Alarm implements AlarmFields {
   /**
-   * @prop timerTimeToWait used to restore timer value that has been set by user in particular alarm
-   * @prop timerTimeToWaitCountdown used to countdown active timer
+   * @prop timeOfActivation settings.autoStopAfterMM can be expired if calculated from
+   * timeToActivate if app platform was turned off during alarm activation, so this date
+   * ensures that alarm will ring for specified time length as it supposed to
+   * @prop timerTimeToWait restore timer value that has been set by user in particular alarm
+   * @prop timerTimeToWaitCountdown countdown active timer
   **/
   [key: string]: any;
 
@@ -21,6 +24,7 @@ export default class Alarm implements AlarmFields {
   alarmState: AlarmStateType | undefined;
 
   timeToActivate: Date | undefined;        // Alarm
+  timeOfActivation: Date | undefined;      // Alarm
   repeatType: RepeatType | undefined;      // Alarm
   repeatDaysOfWeek: Week | undefined;      // Alarm
   repeatCountdown: number | undefined;     // Alarm
@@ -174,7 +178,6 @@ export default class Alarm implements AlarmFields {
    *   if returns null set alarmState = 'disabled'
   **/
   resetAlarm () {
-    if (this.alarmState !== 'active') return;
     if (this.repeatType !== 'once') {
       this.setNextCountdownDate()
       this.alarmState = 'enabled'
@@ -215,6 +218,9 @@ export default class Alarm implements AlarmFields {
    * application platform is turned off for the long time
   **/
   setNextCountdownDate () {
+    const hours = this.timeToActivate.getHours()
+    const minutes = this.timeToActivate.getMinutes()
+
     if (this.repeatType === 'weekly') {
       const currentDateIndex = new Date().getDay()
       const keys = ['sun','mon','tue','wed','thu','fri','sat']
@@ -242,19 +248,15 @@ export default class Alarm implements AlarmFields {
         if (day === nextDayKey) nextDayIndex = index
       })
 
-
-      const hours = this.timeToActivate.getHours()
-      const minutes = this.timeToActivate.getMinutes()
-
       // increment from current date until right day index of the week
-      let increment = -1 // for the case when application platform have been
+      let increment = -1 // for the case when application platform being
       // rebooted after one week
       let nextDate: Date;
 
       function addIncrement() {
         increment += 1
         nextDate = new Date()
-        nextDate.setHours(hours, minutes)
+        nextDate.setHours(hours, minutes, 0)
         nextDate.setDate(nextDate.getDate()+increment)
         if (nextDate.getDay() != nextDayIndex) addIncrement()
       }
@@ -264,18 +266,18 @@ export default class Alarm implements AlarmFields {
 
     else if (this.repeatType === 'countdown') {
       const repeatCountdown = this.repeatCountdown
-      const timeToActivate = this.timeToActivate
+      const currentTime = new Date().getTime()
+      const repeatFrom = this.repeatFrom
 
-      let increment = this.timeToActivate.getDate()
-      let nextDateTS: number;
+      let nextDate = new Date(repeatFrom.getTime())
+      nextDate.setHours(hours, minutes, 0)
 
       function addIncrement() {
-        increment += repeatCountdown
-        nextDateTS = new Date(timeToActivate.getTime()).setDate(increment)
-        if (new Date().getTime() > nextDateTS) addIncrement()
+        nextDate.addDays(repeatCountdown)
+        if (currentTime > nextDate.getTime()) addIncrement()
       }
       addIncrement()
-      this.timeToActivate.setDate(increment)
+      this.timeToActivate = nextDate
     }
   }
 

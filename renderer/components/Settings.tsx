@@ -43,6 +43,7 @@ export default class Settings extends React.Component<any, State> {
 
   saveSettings = () => {
     ipcRenderer.send('save-settings', this.state.settings)
+    setTimeout(() => ipcRenderer.send('icons-tray-change', this.state.settings.trayMonoIcon), 1000)
   }
 
   restoreDefaultSettings () {
@@ -253,7 +254,7 @@ export default class Settings extends React.Component<any, State> {
 
           <div className="settings-header">Program settings</div>
 
-          {/* postponeOffset, autoStopAfterMMIsActive, autoStopAfterMM, showNotification */}
+          {/* postponeOffset, autoStopAfterMMIsActive, autoStopAfterMM */}
           <div className="settings__block">
             <input type="number" min="0" value={settings.postponeOffset}
               onChange={e => {
@@ -278,6 +279,8 @@ export default class Settings extends React.Component<any, State> {
             <div className="margin-left">minutes</div>
           </div>
 
+
+          {/* showNotification, trayMonoIcon, showRepeatInfo, startInTray */}
           <div className="settings__block">
             <input type="checkbox" id="show-notification" checked={settings.showNotification}
               onChange={() => this.updateSettingsKey('showNotification', !settings.showNotification)} />
@@ -287,7 +290,19 @@ export default class Settings extends React.Component<any, State> {
           <div className="settings__block">
             <input type="checkbox" id="tray-mono-icon" checked={settings.trayMonoIcon}
               onChange={() => this.updateSettingsKey('trayMonoIcon', !settings.trayMonoIcon)} />
-            <label htmlFor="tray-mono-icon">Tray mono icon (restart needed)</label>
+            <label htmlFor="tray-mono-icon">Tray mono icon</label>
+          </div>
+
+          <div className="settings__block">
+            <input type="checkbox" id="show-repeat-info" checked={settings.showRepeatInfo}
+              onChange={() => this.updateSettingsKey('showRepeatInfo', !settings.showRepeatInfo)} />
+            <label htmlFor="show-repeat-info">Show repeat info</label>
+          </div>
+
+          <div className="settings__block">
+            <input type="checkbox" id="start-in-tray" checked={settings.startInTray}
+              onChange={() => this.updateSettingsKey('startInTray', !settings.startInTray)} />
+            <label htmlFor="start-in-tray">Start in tray</label>
           </div>
 
 

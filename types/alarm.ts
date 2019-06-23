@@ -27,6 +27,7 @@ export interface AlarmFields {
   alarmState: AlarmStateType | undefined;
 
   timeToActivate: Date | undefined;
+  timeOfActivation: Date | undefined;
   repeatType: RepeatType | undefined;
   repeatDaysOfWeek: Week | undefined;
   repeatCountdown: number | undefined;
@@ -75,6 +76,7 @@ export interface SettingsFields {
   autoStopAfterMMIsActive: boolean;
   autoStopAfterMM: number;
   showNotification: boolean;
+  showRepeatInfo: boolean;
 
   listWidthPx: number;
   editWidthPx: number;

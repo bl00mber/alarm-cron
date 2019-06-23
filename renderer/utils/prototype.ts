@@ -18,3 +18,7 @@ Date.prototype.toLocalISOString = function() {
     dif + pad(tzo / 60) +
     ':' + pad(tzo % 60);
 }
+
+Date.prototype.addDays = function(days) {
+  this.setDate(this.getDate() + days);
+}

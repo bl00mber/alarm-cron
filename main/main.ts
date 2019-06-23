@@ -1,6 +1,6 @@
 import * as path from 'path'
 import { app, BrowserWindow, globalShortcut } from 'electron'
-import { Menu, Tray, Notification } from 'electron'
+import { Menu, Notification } from 'electron'
 import { ipcMain } from 'electron'
 import * as Store from 'electron-store'
 
@@ -48,8 +48,8 @@ ipcMain.on('show-notification', (event: any, title: string, body: string) => {
 
 
 app.on('ready', () => {
-  const settings = store.get('settings')
   // @ts-ignore
+  const settings: SettingsFields = store.get('settings')
   const trayMenu = new TrayMenu(settings.trayMonoIcon)
   trayMenu.setTrayMenu()
 
@@ -61,9 +61,16 @@ app.on('ready', () => {
     trayMenu.setActiveIcon()
   })
 
+  ipcMain.on('icons-tray-change', (event: any, trayMonoIcon: boolean) => {
+    trayMenu.setIcons(trayMonoIcon)
+    trayMenu.setDefaultIcon()
+  })
+
 
   let mainWindow: BrowserWindow | null = null
-  mainWindow = createNewWindow('main')
+  mainWindow = createNewWindow('main', {show: false})
+
+  if (!settings.startInTray) mainWindow.show()
 
   if (process.env.NODE_ENV === 'production') {
     mainWindow.loadURL('file://'+path.resolve(__dirname, '..', 'index.html'))

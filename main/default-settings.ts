@@ -28,6 +28,8 @@ export const defaultSettings: SettingsFields = {
   autoStopAfterMM: 10,
   showNotification: true,
   trayMonoIcon: false,
+  showRepeatInfo: true,
+  startInTray: false,
 
   listWidthPx: 330,
   editWidthPx: 380,
