@@ -20,6 +20,10 @@
   overflow: auto;
 }
 
+.floor-seconds {
+  margin: 0 0 0 10px !important;
+}
+
 .Dropdown-menu, .settings-section {
   flex-direction: column;
 }
@@ -37,7 +41,7 @@
 .settings__btn {
   cursor: pointer;
   padding: 10px 30px;
-  margin: 10px 15px 20px 0;
+  margin: 15px 15px 20px 0;
   border-radius: 5px;
   background: #8384f5;
   color: #fff;

@@ -56,8 +56,12 @@ input, input[type=text], input[type=number] {
   line-height: normal !important;
 }
 
-input[type=text]:disabled {
+input:disabled {
   background: #f7f7ff;
+}
+
+.input-label-disabled {
+  color: #aaa;
 }
 
 .datepicker {
@@ -101,7 +105,6 @@ input[type=text]:disabled {
 // sound-input
 .sound-upload {
   position: relative;
-  overflow: hidden;
 }
 
 .sound-btn {
@@ -126,10 +129,21 @@ input[type=text]:disabled {
 }
 
 .sound-path {
-  padding: 7px;
-  width: 170px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-  display: block;
+  margin-left: 12px;
+  & > .Dropdown-control {
+    width: 200px;
+    padding: 6px 28px 6px 10px;
+    & > .Dropdown-placeholder {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: block;
+    }
+  }
+  & > .Dropdown-menu {
+    max-height: 152px;
+    & > .Dropdown-option {
+      padding: 6px 10px;
+    }
+  }
 }

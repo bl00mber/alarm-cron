@@ -53,6 +53,8 @@ interface State {
 
 export default class AlarmApp extends React.Component<any, State> {
   currentTimeInterval: NodeJS.Timeout;
+  saveAlarmsInterval: NodeJS.Timeout;
+  updateAlarmsTimeout: NodeJS.Timeout;
 
   constructor (props: object) {
     super(props)
@@ -90,11 +92,7 @@ export default class AlarmApp extends React.Component<any, State> {
       settings,
       alarms: compact(alarms),
       selectedAlarmIndex: null,
-      // editIsEnabled: false,
-
-      // dev
-      // selectedAlarmIndex: 0,
-      editIsEnabled: true,
+      editIsEnabled: false,
 
       player: null,
       isPlaying: false,
@@ -110,34 +108,65 @@ export default class AlarmApp extends React.Component<any, State> {
     ipcRenderer.on('postpone-all-active-alarms', this.postponeAllActiveAlarms)
 
     window.addEventListener('unload', (e) => {
-      const { store, settings, alarms } = this.state
-      store.set('settings', settings)
-      store.set('alarms', alarms)
+      this.updateStoreAlarms()
     })
   }
 
   componentDidMount () {
     this.currentTimeInterval = setInterval(() =>
       this.setState({ currentTime: new Date() }, this.alarmsHandler), 1000)
+    this.saveAlarmsInterval = setInterval(this.updateStoreAlarmsForCountdowns, 300000) // 5m
     this.updateAppSize()
+    if (!this.state.settings.startInTray) ipcRenderer.send('activate')
   }
 
   componentWillUnmount () {
     clearInterval(this.currentTimeInterval)
+    clearInterval(this.saveAlarmsInterval)
   }
 
   updateStateSettings = (event: any, settings: SettingsFields) => {
-    this.setState({ settings })
+    this.setState({ settings }, this.updateAppSize)
   }
 
   updateAppSize = () => {
     const { settings } = this.state
+    const height = settings.appHeightPx
     let width
     if (this.state.editIsEnabled && this.state.selectedAlarmIndex !== null)
     { width = settings.listWidthPx + settings.editWidthPx }
     else { width = settings.listWidthPx }
-    remote.getCurrentWindow().setSize(width, settings.appHeightPx)
-    // remote.getCurrentWindow().setSize(1200, 800) // test
+
+    const currentWindow = remote.getCurrentWindow()
+    const size = currentWindow.getSize()
+    const sizeIsTheSame = size[0] === width && size[1] === height
+
+    if (typeof width === 'number' && typeof height === 'number') {
+      if (!sizeIsTheSame) {
+        currentWindow.setMinimumSize(width, height)
+        currentWindow.setSize(width, height)
+        // currentWindow.setSize(1200, 800) // test
+      }
+    } else {
+      throw new TypeError('incorrect window dimensions type')
+    }
+  }
+
+  updateStoreAlarms = () => {
+    this.state.store.set('alarms', this.state.alarms)
+  }
+
+  updateStoreAlarmsForCountdowns = () => {
+    this.state.alarms.forEach(alarm => {
+      if (alarm.alarmType === 'timer' || alarm.alarmType === 'stopwatch') {
+        if (alarm.alarmState !== 'disabled') this.updateStoreAlarms()
+      }
+    })
+  }
+
+  updateStoreAlarmDelayed = () => {
+    if (this.updateAlarmsTimeout) clearInterval(this.updateAlarmsTimeout)
+    this.updateAlarmsTimeout = setTimeout(this.updateStoreAlarms, 3000)
   }
 
   alarmsHandler = () => {
@@ -187,25 +216,35 @@ export default class AlarmApp extends React.Component<any, State> {
           alarm.stopwatchTotalTime += 1
         }
       }
+      else if (alarm.alarmState === 'active') {
+        activeAlarmsCount += 1
 
-      if (alarm.alarmState === 'active') activeAlarmsCount += 1
-
-      // Disable alarms that has been active for more than certain time
-      if (alarm.alarmState === 'active' && settings.autoStopAfterMMIsActive) {
-        if (alarm.alarmType === 'alarm') {
-          if (currentTime.getTime() >
-            (alarm.timeOfActivation.getTime() + settings.autoStopAfterMM*60000)) {
-            activeAlarmsCount -= 1
-            alarm.resetAlarm()
+        // Turn on sound again if alarm app was reloaded with active alarms
+        if (isPlayActivated === false && player === null) {
+          if (alarm.playSound) {
+            isPlayActivated = true
+            this.playSound(alarm.soundPath, alarm.repeatSound)
           }
         }
-        else if (alarm.alarmType === 'timer') {
-          if (alarm.timerTimeToWaitCountdown < settings.autoStopAfterMM*-60) {
-            activeAlarmsCount -= 1
-            alarm.resetTimer()
+
+        // Disable alarms that has been active for more than certain time
+        if (settings.autoStopAfterMMIsActive) {
+          if (alarm.alarmType === 'alarm') {
+            if (currentTime.getTime() >
+              (alarm.timeOfActivation.getTime() + settings.autoStopAfterMM*60000)) {
+              activeAlarmsCount -= 1
+              alarm.resetAlarm()
+            }
+          }
+          else if (alarm.alarmType === 'timer') {
+            if (alarm.timerTimeToWaitCountdown < settings.autoStopAfterMM*-60) {
+              activeAlarmsCount -= 1
+              alarm.resetTimer()
+            }
           }
         }
       }
+
       return alarm
     })
 
@@ -225,8 +264,6 @@ export default class AlarmApp extends React.Component<any, State> {
     this.stopPlayer()
     const { cachedSoundBuffer, cachedSoundPath } = this.state
 
-    ipcRenderer.send('icon-tray-active')
-
     if (cachedSoundBuffer !== null && cachedSoundPath === soundPath) {
       const arrayBuffer = cachedSoundBuffer // check if will work without
       this.playSoundInContext(arrayBuffer, soundPath, repeatSound)
@@ -234,6 +271,7 @@ export default class AlarmApp extends React.Component<any, State> {
     else {
       fs.exists(soundPath, (exists: boolean) => {
         if (exists) {
+          ipcRenderer.send('icon-tray-active')
           const uint8Array = fs.readFileSync(soundPath)
           const arrayBuffer = new Uint8Array(uint8Array).buffer
           this.playSoundInContext(arrayBuffer, soundPath, repeatSound)
@@ -286,7 +324,7 @@ export default class AlarmApp extends React.Component<any, State> {
   startApplication = (applicationCommand: string) => {
     try {
       exec(applicationCommand, (err: Error, stdout: string, stderr: string) => {
-        if (err) console.log(err)
+        if (err) console.error(err)
       })
     }
     catch(error) { console.error(error) }
@@ -343,7 +381,10 @@ export default class AlarmApp extends React.Component<any, State> {
     return Math.floor((date.getTime()-now.getTime())/1000)
   }
 
-  weekToStr (repeatDaysOfWeek: Week): string {
+  weekToStr (_week: Week): string {
+    const repeatDaysOfWeek: Week = {'mon': _week.mon, 'tue': _week.tue, 'wed': _week.wed,
+      'thu': _week.thu, 'fri': _week.fri, 'sat': _week.sat, 'sun': _week.sun}
+
     let weekStr = ''
     for (let key in repeatDaysOfWeek) {
       if (repeatDaysOfWeek[key]) {
@@ -425,6 +466,7 @@ export default class AlarmApp extends React.Component<any, State> {
         <div className="alarm-main-block">
           <div className="alarm-select-container"
             onClick={() => {
+              this.updateStoreAlarmDelayed()
               if (selectedAlarmIndex === index) {
                 this.setState({ selectedAlarmIndex: null }, this.updateAppSize)
               } else {
@@ -467,10 +509,23 @@ export default class AlarmApp extends React.Component<any, State> {
   addDefaultAlarm = () => {
     const { settings } = this.state
 
+    let timeToActivate;
+
+    if (settings.staticTimeIsActive === false) {
+      timeToActivate = this.addSecondsToNow(settings.timeToActivateOffset, settings.floorSeconds)
+    } else {
+      const date = new Date()
+      const time = settings.staticTimeToActivate.split(':')
+      date.setHours(time[0], time[1], 0)
+      if (new Date().getTime() > date.getTime()) { // If time is gone, set alarm to the next day
+        date.setDate(date.getDate()+1)
+      }
+      timeToActivate = date
+    }
+
     const alarm = new Alarm({
       description: settings.descAlarm, alarmState: settings.alarmState,
-      timeToActivate: this.addSecondsToNow(
-        settings.timeToActivateOffset, settings.floorSeconds),
+      timeToActivate,
       repeatType: settings.repeatType, repeatDaysOfWeek: settings.repeatDaysOfWeek,
       repeatCountdown: settings.repeatCountdown, repeatFrom: new Date(),
       playSound: settings.playSound, soundPath: settings.soundPath, repeatSound: settings.repeatSound,
@@ -492,21 +547,24 @@ export default class AlarmApp extends React.Component<any, State> {
         })
     }
 
-    this.setState({ alarms: [...this.state.alarms, alarm] })
+    this.setState({ alarms: [...this.state.alarms, alarm] }, this.updateStoreAlarmDelayed)
   }
 
   deleteSelectedAlarmIndex = () => {
     const { store, alarms } = this.state
-    let { selectedAlarmIndex } = this.state
+    let { selectedAlarmIndex, editIsEnabled } = this.state
     if (selectedAlarmIndex === null) return;
     alarms.splice(selectedAlarmIndex, 1)
     if (alarms.length != 0) {
       selectedAlarmIndex = alarms.length-1 // select last alarm
     } else {
       selectedAlarmIndex = null
+      editIsEnabled = false
     }
-    this.setState({ alarms, selectedAlarmIndex })
-    store.set('alarms', alarms)
+    this.setState({ alarms, selectedAlarmIndex, editIsEnabled }, () => {
+      this.updateAppSize()
+      this.updateStoreAlarmDelayed()
+    })
   }
 
   updateAlarmKey = (key: string, value: any, callback?: () => any) => {
@@ -547,7 +605,7 @@ export default class AlarmApp extends React.Component<any, State> {
     const handlerKey = this.getAlarmHandlerKey(alarmType, alarmState)
     alarm[handlerKey]()
 
-    this.updateAlarmInstance(alarm, alarmIndex)
+    this.updateAlarmInstance(alarm, alarmIndex, this.updateStoreAlarmDelayed)
   }
 
   runCustomAlarmHandler = (handlerKey: string, args?: any[], alarmIndex?: number) => {
@@ -558,7 +616,7 @@ export default class AlarmApp extends React.Component<any, State> {
 
     if (args) { alarm[handlerKey](...args) }
     else { alarm[handlerKey]() }
-    this.updateAlarmInstance(alarm, alarmIndex)
+    this.updateAlarmInstance(alarm, alarmIndex, this.updateStoreAlarmDelayed)
   }
 
   getAlarmHandlerKey (alarmType: AlarmType, alarmState: AlarmStateType): string {
@@ -682,7 +740,7 @@ export default class AlarmApp extends React.Component<any, State> {
 
               <div className={"edit-alarm btn" + (editIsEnabled ? ' active': '')}
                 onClick={() => {
-                  store.set('alarms', alarms)
+                  this.updateStoreAlarmDelayed()
                   this.setState({
                     editIsEnabled: !editIsEnabled,
                     selectedAlarmIndex: editIsEnabled ? null : selectedAlarmIndex,
@@ -745,7 +803,7 @@ export default class AlarmApp extends React.Component<any, State> {
                 // @ts-ignore
                 let url = e.target.href
                 shell.openExternal(url)
-              }}>Nick Reiley (c) 2019</a>
+              }}>Nick Reiley (c)</a>
           </div>
         </div>}
       </div>

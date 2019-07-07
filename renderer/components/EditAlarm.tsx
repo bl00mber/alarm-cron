@@ -6,10 +6,13 @@ Permission to use, copy, modify, and/or distribute this software for any purpose
 THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
+import { remote } from 'electron'
+
 import * as React from 'react'
 import { cloneDeep, capitalize } from 'lodash'
 // @ts-ignore
 import DatePicker from 'react-bootstrap-date-picker'
+import Dropdown from 'react-dropdown'
 // @ts-ignore
 import TimeField from 'react-simple-timefield'
 import Alarm from '../../classes/Alarm'
@@ -159,8 +162,11 @@ export default class EditAlarm extends React.Component<Props, State> {
     this.props.updateAlarmKey('repeatType', repeatType)
   }
 
-  weekJSX = (week: Week, repeatType: RepeatType): React.ReactElement<{}>[] => {
+  weekJSX = (_week: Week, repeatType: RepeatType): React.ReactElement<{}>[] => {
     const weekJSX: React.ReactElement<{}>[] = []
+
+    const week: Week = {'mon': _week.mon, 'tue': _week.tue, 'wed': _week.wed,
+      'thu': _week.thu, 'fri': _week.fri, 'sat': _week.sat, 'sun': _week.sun}
 
     for (let key in week) {
       weekJSX.push(<div key={key}>
@@ -437,7 +443,7 @@ export default class EditAlarm extends React.Component<Props, State> {
 
           <div className="edit__block">
             <div className="sound-upload">
-              <div className="sound-btn">Select sound to play</div>
+              <div className="sound-btn">Select sound</div>
               <input type="file" name="sound-file" accept="audio/mp3"
                 onChange={e => {
                   e.preventDefault()
@@ -445,9 +451,13 @@ export default class EditAlarm extends React.Component<Props, State> {
                   this.props.updateAlarmKey('soundPath', newSoundPath)
                 }} />
 
-              <div className="sound-path">{
-                alarm.soundPath.split('/').pop() ||
-                settings.soundPath.split('/').pop()}</div>
+              <Dropdown className="sound-path"
+                options={['default', 'Train-Station-Street', 'Train-Station-Vietnam', 'Evacuation-Test-Japan', 'Telemetry-Tech-Data-23']}
+                onChange={e => {
+                  this.props.updateAlarmKey('soundPath', remote.app.getAppPath()+'/resources/'+e.value+'.mp3')
+                }}
+                value={alarm.soundPath.split('/').pop() || settings.soundPath.split('/').pop()}
+              />
             </div>
           </div>
         </div>}

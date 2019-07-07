@@ -58,6 +58,10 @@ return {
       }
     ]
   },
+  node: {
+    __dirname: false,
+    __filename: false
+  },
   devServer: (DEV && !MAIN) ? {
     publicPath: 'http://localhost:8080/bundle/',
     port: '8080',

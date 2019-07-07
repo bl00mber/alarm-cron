@@ -285,7 +285,7 @@ export default class Alarm implements AlarmFields {
   restoreFrom (alarmJSON: object) {
     for (let key in alarmJSON) {
       const dateKeys = [
-        'timeToActivate', 'repeatFrom', 'timerTimeFrom', 'stopwatchTimeFrom'
+        'timeToActivate', 'timeOfActivation', 'repeatFrom', 'timerTimeFrom', 'stopwatchTimeFrom'
       ]
       if (dateKeys.includes(key)) {
         // @ts-ignore

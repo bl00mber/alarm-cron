@@ -13,8 +13,6 @@ import Alarm from '../classes/Alarm'
 import { SettingsFields } from '../types/alarm'
 
 
-app.setName('Alarm')
-
 const applicationMenu = new ApplicationMenu()
 applicationMenu.setApplicationMenu()
 
@@ -46,6 +44,11 @@ ipcMain.on('show-notification', (event: any, title: string, body: string) => {
   notification.show()
 })
 
+ipcMain.on('activate', () => {
+  const mainWindow = getWindow('main')
+  if (mainWindow) mainWindow.show()
+})
+
 
 app.on('ready', () => {
   // @ts-ignore
@@ -68,9 +71,10 @@ app.on('ready', () => {
 
 
   let mainWindow: BrowserWindow | null = null
-  mainWindow = createNewWindow('main', {show: false})
-
-  if (!settings.startInTray) mainWindow.show()
+  mainWindow = createNewWindow('main', {
+    show: false, fullscreen: false,
+    icon: app.getAppPath()+'/resources/icon/icon.png',
+  })
 
   if (process.env.NODE_ENV === 'production') {
     mainWindow.loadURL('file://'+path.resolve(__dirname, '..', 'index.html'))
@@ -88,16 +92,16 @@ app.on('ready', () => {
       })
     }
     waitForWebpackDevServer()
-
-    globalShortcut.register('Ctrl+Shift+I', function() {
-      const focusedWindow = BrowserWindow.getFocusedWindow()
-      if (focusedWindow) focusedWindow.webContents.openDevTools()
-    })
-    globalShortcut.register('f5', function() {
-      const focusedWindow = BrowserWindow.getFocusedWindow()
-      if (focusedWindow) focusedWindow.reload()
-    })
   }
+
+  globalShortcut.register('Ctrl+Shift+I', function() {
+    const focusedWindow = BrowserWindow.getFocusedWindow()
+    if (focusedWindow) focusedWindow.webContents.openDevTools()
+  })
+  globalShortcut.register('f5', function() {
+    const focusedWindow = BrowserWindow.getFocusedWindow()
+    if (focusedWindow) focusedWindow.reload()
+  })
 
 
   mainWindow.on('close', (event) => {

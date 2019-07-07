@@ -1,5 +1,6 @@
 interface Date {
   toLocalISOString(): string;
+  addDays(days: number): void;
 }
 
 Date.prototype.toLocalISOString = function() {
@@ -19,6 +20,6 @@ Date.prototype.toLocalISOString = function() {
     ':' + pad(tzo % 60);
 }
 
-Date.prototype.addDays = function(days) {
+Date.prototype.addDays = function(days: number) {
   this.setDate(this.getDate() + days);
 }

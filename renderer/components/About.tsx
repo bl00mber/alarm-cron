@@ -17,6 +17,9 @@ export default class About extends React.Component {
     const { iconCopyright } = this.state
     return(
       <div className="about-container">
+        <a href="https://www.paypal.me/bloomber/30" target="_blank" onClick={this.openWebPage}>
+          <img src="https://img.shields.io/badge/Donate-PayPal-green.svg" alt="Donate" style={{pointerEvents: 'none', marginBottom: '5px'}} /></a>
+
         <div>Copyright (c) Nick Reiley</div>
         <div>bloomber111@gmail.com</div>
         <a className="about-copyright" target="_blank"

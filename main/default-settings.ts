@@ -10,6 +10,9 @@ export const defaultSettings: SettingsFields = {
 
   timeToActivateOffset: 600,
   floorSeconds: false,
+  staticTimeIsActive: false,
+  staticTimeToActivate: '12:00',
+
   repeatType: 'once',
   repeatDaysOfWeek: {mon: false, tue: false, wed: false, thu: false, fri: false, sat: false, sun: false},
   repeatCountdown: 1,
@@ -25,7 +28,7 @@ export const defaultSettings: SettingsFields = {
 
   postponeOffset: 300,
   autoStopAfterMMIsActive: true,
-  autoStopAfterMM: 10,
+  autoStopAfterMM: 15,
   showNotification: true,
   trayMonoIcon: false,
   showRepeatInfo: true,

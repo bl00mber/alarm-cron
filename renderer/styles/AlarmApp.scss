@@ -1,10 +1,10 @@
 $shadow: #0000001f;
 $border: #b3c5d6;
 
-.alarms-list::-webkit-scrollbar {
+.alarms-list::-webkit-scrollbar, .edit-container::-webkit-scrollbar {
   width: 12px;
 }
-.alarms-list::-webkit-scrollbar-thumb {
+.alarms-list::-webkit-scrollbar-thumb, .edit-container::-webkit-scrollbar {
   background-color: #d5d6ff;
   border-radius: 8px;
 }
@@ -115,6 +115,7 @@ div {
 
 .edit-container {
   background: linear-gradient(#f9f9fd, #f1f3ff);
+  overflow-y: auto;
 }
 
 .alarms-controls {

@@ -6,12 +6,14 @@ Permission to use, copy, modify, and/or distribute this software for any purpose
 THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
-import { ipcRenderer } from 'electron'
+import { remote, ipcRenderer } from 'electron'
 import * as Store from 'electron-store'
 
 import * as React from 'react'
 import { cloneDeep, capitalize } from 'lodash'
 import Dropdown from 'react-dropdown'
+// @ts-ignore
+import TimeField from 'react-simple-timefield'
 import 'react-dropdown/style.css'
 import { SettingsFields, Week, RepeatType } from '../../types/alarm'
 
@@ -82,8 +84,11 @@ export default class Settings extends React.Component<any, State> {
     this.setState({ settings })
   }
 
-  weekJSX = (week: Week, repeatType: RepeatType): React.ReactElement<{}>[] => {
+  weekJSX = (_week: Week, repeatType: RepeatType): React.ReactElement<{}>[] => {
     const weekJSX: React.ReactElement<{}>[] = []
+
+    const week: Week = {'mon': _week.mon, 'tue': _week.tue, 'wed': _week.wed,
+      'thu': _week.thu, 'fri': _week.fri, 'sat': _week.sat, 'sun': _week.sun}
 
     for (let key in week) {
       weekJSX.push(<div key={key}>
@@ -120,19 +125,19 @@ export default class Settings extends React.Component<any, State> {
           </div>
 
           <div className="settings__block">
-            <input type="text" autoComplete="off" className="" value={settings.descAlarm}
+            <input type="text" autoComplete="off" value={settings.descAlarm}
               onChange={e => this.updateSettingsKey('descAlarm', settings.descAlarm)} />
             <div className="margin-left">alarm description</div>
           </div>
 
           <div className="settings__block">
-            <input type="text" autoComplete="off" className="" value={settings.descTimer}
+            <input type="text" autoComplete="off" value={settings.descTimer}
               onChange={e => this.updateSettingsKey('descStopwatch', settings.descTimer)} />
             <div className="margin-left">timer description</div>
           </div>
 
           <div className="settings__block">
-            <input type="text" autoComplete="off" className="" value={settings.descStopwatch}
+            <input type="text" autoComplete="off" value={settings.descStopwatch}
               onChange={e => this.updateSettingsKey('descStopwatch', settings.descStopwatch)} />
             <div className="margin-left">stopwatch description</div>
           </div>
@@ -141,18 +146,34 @@ export default class Settings extends React.Component<any, State> {
           {/* timeToActivateOffset, floorSeconds */}
           <div className="settings__block">
             <input type="number" min="0" value={settings.timeToActivateOffset}
+              disabled={settings.staticTimeIsActive}
               onChange={e => {
                 if (+e.target.value >= +e.target.min) {
                   this.updateSettingsKey('timeToActivateOffset', e.target.value)
               }}}
             />
-            <div className="margin-left">alarm offset</div>
+            <div className={"margin-left"+(settings.staticTimeIsActive?" input-label-disabled":"")}>alarm offset</div>
+
+            <input type="checkbox" id="floor-seconds" checked={settings.floorSeconds}
+              disabled={settings.staticTimeIsActive}
+              onChange={() => this.updateSettingsKey('floorSeconds', !settings.floorSeconds)} />
+            <label htmlFor="floor-seconds" className="floor-seconds">floor seconds</label>
           </div>
 
+
+          {/* staticTimeIsActive, staticTimeToActivate */}
+          <div className="settings__block">If time is gone, alarm will be set to the next day</div>
           <div className="settings__block">
-            <input type="checkbox" id="floor-seconds" checked={settings.floorSeconds}
-              onChange={() => this.updateSettingsKey('floorSeconds', !settings.floorSeconds)} />
-            <label htmlFor="floor-seconds">Floor offsetted seconds</label>
+            <input type="checkbox" id="static-time" checked={settings.staticTimeIsActive}
+              onChange={() => this.updateSettingsKey('staticTimeIsActive', !settings.staticTimeIsActive)} />
+            <label htmlFor="static-time">Static time</label>
+
+            <TimeField
+              value={settings.staticTimeToActivate}
+              className="timepicker"
+              onChange={(value: string) => this.updateSettingsKey('staticTimeToActivate', value)}
+              input={<input className="edit__time-input" autoComplete="off" />}
+            />
           </div>
 
 
@@ -197,7 +218,7 @@ export default class Settings extends React.Component<any, State> {
 
           <div className="settings__block">
             <div className="sound-upload">
-              <div className="sound-btn">Select sound to play</div>
+              <div className="sound-btn">Select sound</div>
               <input type="file" name="sound-file" accept="audio/mp3"
                 onChange={e => {
                   e.preventDefault()
@@ -205,8 +226,13 @@ export default class Settings extends React.Component<any, State> {
                   this.updateSettingsKey('soundPath', newSoundPath)
                 }} />
 
-              <div className="sound-path">{
-                settings.soundPath.split('/').pop()}</div>
+                <Dropdown className="sound-path"
+                  options={['default', 'Train-Station-Street', 'Train-Station-Vietnam', 'Evacuation-Test-Japan', 'Telemetry-Tech-Data-23']}
+                  onChange={e => {
+                    this.updateSettingsKey('soundPath', remote.app.getAppPath()+'/resources/'+e.value+'.mp3')
+                  }}
+                  value={settings.soundPath.split('/').pop()}
+                />
             </div>
           </div>
 
@@ -311,7 +337,7 @@ export default class Settings extends React.Component<any, State> {
             <input type="number" min="0" value={settings.listWidthPx}
               onChange={e => {
                 if (+e.target.value >= +e.target.min) {
-                  this.updateSettingsKey('listWidthPx', e.target.value)
+                  this.updateSettingsKey('listWidthPx', +e.target.value)
               }}}
             />
             <div className="margin-left">alarms list width px</div>
@@ -321,7 +347,7 @@ export default class Settings extends React.Component<any, State> {
             <input type="number" min="0" value={settings.editWidthPx}
               onChange={e => {
                 if (+e.target.value >= +e.target.min) {
-                  this.updateSettingsKey('editWidthPx', e.target.value)
+                  this.updateSettingsKey('editWidthPx', +e.target.value)
               }}}
             />
             <div className="margin-left">edit block width px</div>
@@ -331,7 +357,7 @@ export default class Settings extends React.Component<any, State> {
             <input type="number" min="0" value={settings.appHeightPx}
               onChange={e => {
                 if (+e.target.value >= +e.target.min) {
-                  this.updateSettingsKey('appHeightPx', e.target.value)
+                  this.updateSettingsKey('appHeightPx', +e.target.value)
               }}}
             />
             <div className="margin-left">edit app height px</div>

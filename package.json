@@ -4,12 +4,21 @@
   "description": "Create alerts, timers and stopwatches from the tray",
   "main": "./bundle/main.js",
   "scripts": {
-    "start": "npm run bundle:main && npm-run-all --parallel dev:renderer serve:main",
+    "start": "npm run dev:bundle:main && npm-run-all --parallel dev:renderer dev:serve:main",
     "dev:renderer": "TARGET=dev NODE_ENV=development webpack-dev-server --progress",
-    "bundle:main": "TARGET=dev NODE_ENV=development webpack --env.main --mode development",
-    "serve:main": "NODE_ENV=development electron .",
-    "test": "jest",
-    "build": "rm -rf ./build/* && ./build.sh"
+    "dev:bundle:main": "TARGET=dev NODE_ENV=development webpack --env.main",
+    "dev:serve:main": "NODE_ENV=development electron .",
+    "start:build": "NODE_ENV=production electron .",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rm -rf ./build/* && npm run build:bundle:renderer && npm run build:bundle:main",
+    "build:bundle:renderer": "TARGET=build NODE_ENV=production webpack",
+    "build:bundle:main": "TARGET=build NODE_ENV=production webpack --env.main",
+    "app:linux": "./scripts/app-linux.sh",
+    "app:mac": "./scripts/app-mac.sh",
+    "app:windows": "./scripts/app-windows.sh",
+    "installer:linux": "./scripts/installer-linux.sh",
+    "installer:mac": "./scripts/installer-mac.sh",
+    "installer:windows": "node ./scripts/installer-windows.js"
   },
   "repository": {
     "type": "git",
@@ -24,35 +33,29 @@
   "engines": {
     "node": ">=11.7.0"
   },
-  "jest": {
-    "moduleNameMapper": {
-      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/test/__mocks__/fileMock.js",
-      "\\.(css|less|stylus|scss)$": "<rootDir>/test/__mocks__/styleMock.js"
-    },
-    "globals": {
-      "__DEV__": false
-    }
-  },
   "devDependencies": {
     "@babel/core": "^7.4.4",
     "@types/lodash": "^4.14.134",
     "@types/react": "^16.8.16",
     "@types/react-dom": "^16.8.4",
     "@types/react-router-dom": "^4.3.3",
+    "acorn": "^6.1.1",
     "axios": "^0.18.0",
     "babel-loader": "^8.0.5",
     "babel-preset-react-app": "^8.0.0",
     "css-loader": "^2.1.1",
     "electron": "^5.0.0",
+    "electron-installer-debian": "^2.0.0",
+    "electron-installer-dmg": "^3.0.0",
     "electron-packager": "^13.1.1",
+    "electron-winstaller": "^3.0.4",
     "img-loader": "^3.0.1",
-    "jest": "^24.7.1",
     "mini-css-extract-plugin": "^0.6.0",
     "node-sass": "^4.12.0",
     "npm-run-all": "^4.1.5",
     "sass-loader": "^7.1.0",
-    "spectron": "^5.0.0",
     "style-loader": "^0.23.1",
+    "supports-color": "^7.0.0",
     "terser-webpack-plugin": "^1.2.3",
     "typescript": "^3.4.5",
     "url-loader": "^1.1.2",

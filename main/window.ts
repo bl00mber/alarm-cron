@@ -28,7 +28,7 @@ export const createNewWindow = (windowId: string, options: object = {}): Browser
   if (windowId !== 'main') {
     if (process.env.NODE_ENV === 'production') {
       const indexUrl = 'file://'+path.resolve(__dirname, '..', 'index.html')
-      newWindow.loadURL(`indexUrl#/${windowId}`)
+      newWindow.loadURL(`${indexUrl}#/${windowId}`)
     } else {
       newWindow.loadURL('http://localhost:8080/index.html#/'+windowId)
     }
