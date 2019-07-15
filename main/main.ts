@@ -12,6 +12,10 @@ import { createNewWindow, getWindow } from './window'
 import Alarm from '../classes/Alarm'
 import { SettingsFields } from '../types/alarm'
 
+import handleSquirrelEvent from './squirrel-event'
+if (require('electron-squirrel-startup')) app.quit()
+if (handleSquirrelEvent()) process.exit()
+
 
 const applicationMenu = new ApplicationMenu()
 applicationMenu.setApplicationMenu()
@@ -73,7 +77,6 @@ app.on('ready', () => {
   let mainWindow: BrowserWindow | null = null
   mainWindow = createNewWindow('main', {
     show: false, fullscreen: false,
-    icon: app.getAppPath()+'/resources/icon/icon.png',
   })
 
   if (process.env.NODE_ENV === 'production') {

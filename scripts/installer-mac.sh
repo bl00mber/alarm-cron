@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
-electron-installer-dmg "Alarm Cron-darwin-x64/Alarm Cron.app" "Alarm Cron" \
---out=build/installers/ --icon=resources/icon/icon.png
+electron-installer-dmg "build/alarm-cron-darwin-x64/alarm-cron.app" "Alarm-Cron" \
+--out=build/installers/ --icon=icon/icon.icns --title="Alarm Cron"

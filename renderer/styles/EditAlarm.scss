@@ -24,7 +24,6 @@
 
 .edit-controls-container {
   flex-grow: 1;
-  width: 380px;
 }
 
 .edit__btn {
@@ -54,6 +53,14 @@ input, input[type=text], input[type=number] {
   outline: none;
   font-size: 14px !important;
   line-height: normal !important;
+}
+
+input[type=text] {
+  max-width: 410px;
+}
+
+input[type=number] {
+  max-width: 70px;
 }
 
 input:disabled {

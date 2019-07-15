@@ -3,6 +3,8 @@ import * as React from 'react'
 
 import '../styles/About.scss'
 
+import imgDonatePaypal from '../assets/img/Donate-PayPal-green.svg'
+
 export default class About extends React.Component {
   state = {
     iconCopyright: false,
@@ -18,7 +20,7 @@ export default class About extends React.Component {
     return(
       <div className="about-container">
         <a href="https://www.paypal.me/bloomber/30" target="_blank" onClick={this.openWebPage}>
-          <img src="https://img.shields.io/badge/Donate-PayPal-green.svg" alt="Donate" style={{pointerEvents: 'none', marginBottom: '5px'}} /></a>
+          <img src={imgDonatePaypal} alt="Donate" style={{pointerEvents: 'none', marginBottom: '5px'}} /></a>
 
         <div>Copyright (c) Nick Reiley</div>
         <div>bloomber111@gmail.com</div>

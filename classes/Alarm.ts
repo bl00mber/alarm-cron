@@ -1,11 +1,20 @@
 /*
 Copyright (c) Nick Reiley (https://github.com/bl00mber) <bloomber111@gmail.com>
 
-Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
 
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
+import { cloneDeep } from 'lodash'
 import { AlarmFields, AlarmType, AlarmStateType,
   RepeatType, Week } from '../types/alarm'
 
@@ -223,6 +232,7 @@ export default class Alarm implements AlarmFields {
 
     if (this.repeatType === 'weekly') {
       const currentDateIndex = new Date().getDay()
+      // days order according to js date interface
       const keys = ['sun','mon','tue','wed','thu','fri','sat']
       // fill firstDays in remainingDays by empty indices to prevent indices shift
       const remainingDays = [...keys].fill('', 0, currentDateIndex+1)
@@ -232,15 +242,23 @@ export default class Alarm implements AlarmFields {
       let nextDayIndex: number;
 
       // firstly iterate remaining days of the week, not including current day
-      remainingDays.forEach((day) => {
-        if (this.repeatDaysOfWeek[day]) nextDayKey = day
-      })
+      for (const day of remainingDays) {
+        if (this.repeatDaysOfWeek[day]) {
+          nextDayKey = day
+          break
+        }
+      }
       // then iterate first days of the week, including current day
-      if (!nextDayKey) firstDays.forEach((day) => {
-        if (this.repeatDaysOfWeek[day]) nextDayKey = day
-      })
+      if (!nextDayKey) {
+        for (const day of firstDays) {
+          if (this.repeatDaysOfWeek[day]) {
+            nextDayKey = day
+            break
+          }
+        }
+      }
 
-      // find out the nearest day
+      // find the nearest day
       remainingDays.forEach((day, index) => {
         if (day === nextDayKey) nextDayIndex = index
       })

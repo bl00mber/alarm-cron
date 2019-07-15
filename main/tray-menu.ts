@@ -75,12 +75,17 @@ export default class TrayMenu {
   }
 
   setIcons (trayMonoIcon: boolean) {
-    if (trayMonoIcon) {
+    if (!trayMonoIcon) {
+      if (process.platform !== 'darwin') {
+        this.defaultIcon = app.getAppPath()+'/resources/icon-tray.png'
+        this.activeIcon = app.getAppPath()+'/resources/icon-tray-active.png'
+      } else {
+        this.defaultIcon = app.getAppPath()+'/resources/icon-mac.png'
+        this.activeIcon = app.getAppPath()+'/resources/icon-mac-active.png'
+      }
+    } else {
       this.defaultIcon = app.getAppPath()+'/resources/icon-tray-mono.png'
       this.activeIcon = app.getAppPath()+'/resources/icon-tray-active-mono.png'
-    } else {
-      this.defaultIcon = app.getAppPath()+'/resources/icon-tray.png'
-      this.activeIcon = app.getAppPath()+'/resources/icon-tray-active.png'
     }
   }
 

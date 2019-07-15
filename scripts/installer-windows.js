@@ -5,7 +5,7 @@ installer = electronInstaller.createWindowsInstaller({
   outputDirectory: './build/installers/win32',
   authors: 'Nick Reiley',
   setupExe: 'AlarmCronInstaller.exe',
-  setupIcon: './resources/icon/icon.ico',
+  setupIcon: './icon/icon.ico',
 })
 
 installer.then(() => console.log('Windows installer created'), (e) => console.log(`Error: ${e.message}`))

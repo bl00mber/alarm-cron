@@ -1,4 +1,5 @@
 bundle
 build
+releases
 node_modules
 package-lock.json

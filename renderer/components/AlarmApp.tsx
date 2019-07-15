@@ -1,9 +1,17 @@
 /*
 Copyright (c) Nick Reiley (https://github.com/bl00mber) <bloomber111@gmail.com>
 
-Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
 
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
 import * as fs  from 'fs'
@@ -729,8 +737,7 @@ export default class AlarmApp extends React.Component<any, State> {
     const { store, settings, alarms, currentTime, selectedAlarmIndex, editIsEnabled } = this.state
     return (
       <div className="app-container">
-        <div className="alarms-container" style={{
-          width: settings.listWidthPx+'px', height: settings.appHeightPx+'px'}}>
+        <div className="alarms-container" style={{width: settings.listWidthPx+'px'}}>
 
           <div className="alarms-controls">
             <div className="alarms-modification-controls padding-controls">
@@ -778,8 +785,7 @@ export default class AlarmApp extends React.Component<any, State> {
         </div>
 
         {(editIsEnabled && selectedAlarmIndex !== null) &&
-        <div className="edit-container" style={{
-          width: settings.editWidthPx+'px', height: settings.appHeightPx+'px'}}>
+        <div className="edit-container" style={{width: settings.editWidthPx+'px'}}>
           <EditAlarm
             alarm={alarms[selectedAlarmIndex]}
             settings={settings}

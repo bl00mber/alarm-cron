@@ -36,5 +36,5 @@ export const defaultSettings: SettingsFields = {
 
   listWidthPx: 330,
   editWidthPx: 380,
-  appHeightPx: 622,
+  appHeightPx: process.platform === 'win32' ? 690 : (process.platform === 'darwin' ? 650 : 622),
 }

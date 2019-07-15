@@ -14,11 +14,11 @@
     "build:bundle:renderer": "TARGET=build NODE_ENV=production webpack",
     "build:bundle:main": "TARGET=build NODE_ENV=production webpack --env.main",
     "app:linux": "./scripts/app-linux.sh",
-    "app:mac": "./scripts/app-mac.sh",
     "app:windows": "./scripts/app-windows.sh",
+    "app:mac": "./scripts/app-mac.sh",
     "installer:linux": "./scripts/installer-linux.sh",
-    "installer:mac": "./scripts/installer-mac.sh",
-    "installer:windows": "node ./scripts/installer-windows.js"
+    "installer:windows": "node ./scripts/installer-windows.js",
+    "installer:mac": "./scripts/installer-mac.sh"
   },
   "repository": {
     "type": "git",
@@ -65,6 +65,7 @@
     "webpack-merge": "^4.2.1"
   },
   "dependencies": {
+    "electron-squirrel-startup": "^1.0.0",
     "electron-store": "^3.2.0",
     "lodash": "^4.17.11",
     "react": "^16.8.6",

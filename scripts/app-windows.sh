@@ -2,9 +2,9 @@
 source ./scripts/config.sh
 
 electron-packager . --out=build --overwrite \
-$EXTRARESOURCES \
+$IGNORE \
 --platform=win32 --arch=ia32 \
---icon=resources/icon/icon.ico --prune=true --asar \
+--icon=icon/icon.ico --prune=true --asar \
 --version-string.CompanyName='Nick Reiley (https://github.com/bl00mber) <bloomber111@gmail.com>' \
 --version-string.ProductName='Alarm Cron' \
 --version-string.FileDescription='Alarm Cron' \

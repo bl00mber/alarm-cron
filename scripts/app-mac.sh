@@ -2,6 +2,6 @@
 source ./scripts/config.sh
 
 electron-packager . --out=build --overwrite \
-$EXTRARESOURCES \
+$IGNORE \
 --platform=darwin --arch=x64 \
---icon=resources/icon/icon.icns --prune=true --asar
+--icon=icon/icon.icns --prune=true --asar
