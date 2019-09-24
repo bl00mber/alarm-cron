@@ -4,6 +4,7 @@ export IGNORE="\
 --ignore=^/icon \
 --ignore=^/main \
 --ignore=^/renderer \
+--ignore=^/releases \
 --ignore=^/screens \
 --ignore=^/scripts \
 --ignore=^/types \

@@ -734,7 +734,7 @@ export default class AlarmApp extends React.Component<any, State> {
   }
 
   render () {
-    const { store, settings, alarms, currentTime, selectedAlarmIndex, editIsEnabled } = this.state
+    const { settings, alarms, currentTime, selectedAlarmIndex, editIsEnabled } = this.state
     return (
       <div className="app-container">
         <div className="alarms-container" style={{width: settings.listWidthPx+'px'}}>

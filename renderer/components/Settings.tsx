@@ -39,7 +39,6 @@ export default class Settings extends React.Component<any, State> {
     const store = new Store()
 
     this.state = {
-      store,
       // @ts-ignore
       settings: store.get('settings'),
     }
