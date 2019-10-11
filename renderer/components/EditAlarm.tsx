@@ -318,13 +318,16 @@ export default class EditAlarm extends React.Component<Props, State> {
           <div className="edit__block margin-bottom">
             <DatePicker
               value={alarm.timeToActivate.toLocalISOString()}
-              className="datepicker margin-right"
+              className="datepicker"
               showClearButton={false}
               onChange={(value: string) =>
                 this.updateDate('timeToActivate', alarm.timeToActivate, value)}
               onFocus={() => this.setState({ cursorOverCalendar: true })}
               onBlur={() => this.setState({ cursorOverCalendar: false })}
             />
+
+            <div className="refresh-btn" onClick={() =>
+              this.updateDate('timeToActivate', alarm.timeToActivate, new Date().toLocalISOString())}>&#x21bb;</div>
 
             <TimeField
               value={this.getTimeFromDate(alarm.timeToActivate)}
@@ -333,6 +336,11 @@ export default class EditAlarm extends React.Component<Props, State> {
                 this.updateTime('timeToActivate', alarm.timeToActivate, value)}
               input={<input className="edit__time-input" autoComplete="off" />}
             />
+
+            <div className="refresh-btn" onClick={() => {
+              const hours = new Date().getHours()
+              const value = hours > 10 ? hours+':00' : '0'+hours+':00'
+              this.updateTime('timeToActivate', alarm.timeToActivate, value)}}>&#x21bb;</div>
           </div>
 
           <div className="edit__block margin-bottom">Repeat: {this.getRepeatString()}</div>
@@ -363,6 +371,9 @@ export default class EditAlarm extends React.Component<Props, State> {
               onFocus={() => this.setState({ cursorOverCalendar: true })}
               onBlur={() => this.setState({ cursorOverCalendar: false })}
             />
+
+            <div className="refresh-btn" onClick={() =>
+              this.updateDate('repeatFrom', alarm.repeatFrom, new Date().toLocalISOString())}>&#x21bb;</div>
           </div>
         </div>}
 

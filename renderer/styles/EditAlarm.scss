@@ -60,7 +60,7 @@ input[type=text] {
 }
 
 input[type=number] {
-  max-width: 70px;
+  max-width: 60px;
 }
 
 input:disabled {
@@ -72,7 +72,7 @@ input:disabled {
 }
 
 .datepicker {
-  max-width: 110px !important;
+  max-width: 100px !important;
   &.moved + div > div {
     top: auto !important;
     bottom: 50px !important;
@@ -96,7 +96,7 @@ input:disabled {
 }
 
 .timepicker {
-  max-width: 110px;
+  max-width: 100px;
 }
 
 .daypicker {
@@ -152,5 +152,20 @@ input:disabled {
     & > .Dropdown-option {
       padding: 6px 10px;
     }
+  }
+}
+
+.refresh-btn {
+  color: #fff;
+  background: #a3a4ff;
+  border-radius: 4px;
+  width: 20px;
+  height: 25px;
+  padding: 4px;
+  cursor: pointer;
+  margin: 5px 7px;
+
+  &:active {
+    background: #8384f5;
   }
 }

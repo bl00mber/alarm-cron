@@ -99,8 +99,10 @@ export default class AlarmApp extends React.Component<any, State> {
       // @ts-ignore
       settings,
       alarms: compact(alarms),
-      selectedAlarmIndex: null,
-      editIsEnabled: false,
+      // selectedAlarmIndex: null,
+      // editIsEnabled: false,
+      selectedAlarmIndex: 0,
+      editIsEnabled: true,
 
       player: null,
       isPlaying: false,
@@ -151,9 +153,9 @@ export default class AlarmApp extends React.Component<any, State> {
 
     if (typeof width === 'number' && typeof height === 'number') {
       if (!sizeIsTheSame) {
-        currentWindow.setMinimumSize(width, height)
-        currentWindow.setSize(width, height)
-        // currentWindow.setSize(1200, 800) // test
+        // currentWindow.setMinimumSize(width, height)
+        // currentWindow.setSize(width, height)
+        currentWindow.setSize(1200, 800) // test
       }
     } else {
       throw new TypeError('incorrect window dimensions type')
