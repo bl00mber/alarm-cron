@@ -99,10 +99,10 @@ export default class AlarmApp extends React.Component<any, State> {
       // @ts-ignore
       settings,
       alarms: compact(alarms),
-      // selectedAlarmIndex: null,
-      // editIsEnabled: false,
-      selectedAlarmIndex: 0,
-      editIsEnabled: true,
+      selectedAlarmIndex: null,
+      editIsEnabled: false,
+      // selectedAlarmIndex: 0,
+      // editIsEnabled: true,
 
       player: null,
       isPlaying: false,
@@ -153,9 +153,9 @@ export default class AlarmApp extends React.Component<any, State> {
 
     if (typeof width === 'number' && typeof height === 'number') {
       if (!sizeIsTheSame) {
-        // currentWindow.setMinimumSize(width, height)
-        // currentWindow.setSize(width, height)
-        currentWindow.setSize(1200, 800) // test
+        currentWindow.setMinimumSize(width, height)
+        currentWindow.setSize(width, height)
+        // currentWindow.setSize(1200, 800) // dev
       }
     } else {
       throw new TypeError('incorrect window dimensions type')
@@ -485,10 +485,12 @@ export default class AlarmApp extends React.Component<any, State> {
             }}>
             <div className={this.getAlarmIconClass(alarm.alarmType)}
               style={{backgroundImage: this.getAlarmIconImage(alarm.alarmType)}}></div>
-            {this.alarmCountdownsJSX(alarm.alarmType, alarm)}
-            <div className="alarm-description padding" style={
-              (alarm.alarmType==='alarm' && alarm.repeatType!=='once')?
-              {maxWidth: '140px'}:{}}>{alarm.description}</div>
+
+            <div className="alarm-countdown-description">
+              {this.alarmCountdownsJSX(alarm.alarmType, alarm)}
+              <div className="alarm-description">{alarm.description}</div>
+            </div>
+
           </div>
           <div className={"alarm-handler__btn padding "+
             this.getAlarmHandlerClass(alarm.alarmState)}

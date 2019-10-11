@@ -118,7 +118,8 @@ div {
   margin-right: 0;
 }
 
-.alarms-container, .edit-container, .alarms-list, .alarm-countdown, .alarm-container {
+.alarms-container, .edit-container, .alarms-list, .alarm-container,
+.alarm-countdown-description {
   flex-direction: column;
 }
 
@@ -145,7 +146,7 @@ div {
 
 .alarm-container {
   min-height: fit-content;
-  margin: 10px;
+  margin: 12px;
   margin-top: 0;
   border-radius: 8px;
   box-shadow: 0 2px 8px $shadow;
@@ -167,9 +168,10 @@ div {
 }
 
 .alarm-repeat {
-  padding: 6px 5px 6px 12px;
+  padding: 4px 5px 5px 12px;
   border-bottom: 1px solid #ddddff;
   border-radius: inherit;
+  color: #6b6b6b;
 }
 
 .alarm-type {
@@ -192,15 +194,26 @@ div {
   justify-content: center;
 }
 
+.alarm-countdown-description {
+  flex-grow: 1;
+}
+
 .alarm-countdown {
-  max-width: 130px;
-  padding: 7px;
+  justify-content: flex-start;
+  padding: 4px 6px;
   border-left: 1px solid $border;
+  border-bottom: 1px solid #b3c5d6;
+}
+
+.alarm-countdown-child {
+  margin-right: 10px;
 }
 
 .alarm-description {
+  justify-content: flex-start;
   align-items: center;
   flex-grow: 1;
   border-left: 1px solid $border;
   word-break: break-all;
+  padding: 4px 5px 4px 6px;
 }
